@@ -60,3 +60,27 @@ function handleMicrobitMessage(event) {
         statusText.innerText = `Status: Connected successfully to Channel ${channel}!`;
     }
 }
+
+// Function to send a command packet as a compact string
+async function sendCommandPacket(cmd, left, right) {
+    if (!rxCharacteristic) return; // Make sure we are connected
+
+    // Format the data tightly and MUST include the \n (newline) at the end!
+    let payloadString = `${cmd},${left},${right}\n`;
+    
+    // Web Bluetooth requires data to be sent as a byte array, 
+    // so we encode our string into UTF-8 bytes right before sending.
+    let encoder = new TextEncoder('utf-8');
+    let payload = encoder.encode(payloadString);
+
+    try {
+        // Send the payload instantly
+        await rxCharacteristic.writeValueWithoutResponse(payload);
+        // console.log("Sent: " + payloadString); 
+    } catch (error) {
+        console.error("Failed to send payload:", error);
+    }
+}
+
+// Example usage to trigger the happy face:
+// sendCommandPacket(1, 255, 128);
