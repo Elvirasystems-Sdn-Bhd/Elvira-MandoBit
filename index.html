@@ -1,29 +1,743 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Elvira-Mando:Bit Controller</title>
-    <link rel="stylesheet" href="style.css">
-</head>
-<body>
-    <div class="container">
-        <h1>Elvira-Mando:Bit Setup</h1>
-        
-        <div class="control-block">
-            <label for="channelSelect">Select Micro:Bit / Channel:</label>
-            <select id="channelSelect">
-                <option value="Robot_1">Robot 1 (Primary)</option>
-                <option value="Robot_2">Robot 2 (Secondary)</option>
-                <option value="Gateway">Gateway Mode</option>
-            </select>
-        </div>
+<!doctype html>
+<html lang="en" class="h-full">
+ <head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no, maximum-scale=1.0">
+  <title>PS2 DualShock HUD Controller Builder</title>
+  <script src="https://cdn.tailwindcss.com/3.4.17"></script>
+  <script src="/_sdk/element_sdk.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/lucide@0.263.0/dist/umd/lucide.min.js"></script>
+  <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;700&family=Orbitron:wght@400;700;900&display=swap" rel="stylesheet">
+  <style>
+  html, body { height: 100%; margin: 0; padding: 0; overflow: hidden; touch-action: none; user-select: none; -webkit-user-select: none; }
 
-        <button id="connectBtn">Connect to Bluetooth</button>
-        
-        <p id="statusText">Status: Disconnected</p>
+  :root {
+    --bg: #0a0a0f;
+    --surface: #141420;
+    --text: #e0e0f0;
+    --accent: #00e5ff;
+    --accent2: #ff3d71;
+    --scale-factor: 1;
+  }
+
+  /* --- Responsive Scaling --- */
+  @media (max-width: 1280px) { :root { --scale-factor: 0.85; } }
+  @media (max-width: 1024px) { :root { --scale-factor: 0.75; } }
+
+  /* --- UI Builder Specifics --- */
+  #workspace { 
+    width: 100vw; 
+    height: calc(100vh - 30px); 
+    position: relative; 
+    transform: scale(var(--scale-factor)); 
+    transform-origin: top left; 
+    width: calc(100vw / var(--scale-factor)); 
+    height: calc((100vh - 30px) / var(--scale-factor));
+  }
+  
+  .ui-group {
+    position: absolute;
+    --local-scale: 1; 
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: calc(8px * var(--local-scale));
+    padding: calc(16px * var(--local-scale));
+  }
+
+  .drag-handle {
+    width: 100%; height: calc(20px * var(--local-scale));
+    background: rgba(0, 229, 255, 0.1);
+    cursor: grab; display: flex; align-items: center; justify-content: center;
+    border-radius: 4px; opacity: 0; transition: opacity 0.2s;
+    color: var(--accent); font-size: calc(10px * var(--local-scale));
+    font-family: 'Orbitron', sans-serif; margin-bottom: calc(4px * var(--local-scale));
+    touch-action: none; pointer-events: none;
+  }
+  .ui-group:hover .drag-handle { opacity: 1; }
+  .drag-handle:active { cursor: grabbing; }
+  .edit-mode-active .drag-handle { pointer-events: auto; }
+  body:not(.edit-mode-active) .drag-handle { display: none !important; }
+  
+  .resize-handle {
+    position: absolute; bottom: 0; right: 0;
+    width: 15px; height: 15px;
+    background: var(--accent); opacity: 0; cursor: nwse-resize;
+    clip-path: polygon(100% 0, 100% 100%, 0 100%);
+    transition: opacity 0.2s; pointer-events: none;
+  }
+  .ui-group:hover .resize-handle { opacity: 0.7; }
+  .edit-mode-active .resize-handle { pointer-events: auto; }
+  body:not(.edit-mode-active) .resize-handle { display: none !important; }
+
+  .export-btn {
+    position: fixed; top: 16px; right: 16px; z-index: 1000;
+    padding: 8px 16px; background: rgba(0, 229, 255, 0.2);
+    border: 1px solid var(--accent); color: var(--accent);
+    font-family: 'Orbitron'; cursor: pointer; border-radius: 4px;
+  }
+  .export-btn:hover { background: rgba(0, 229, 255, 0.4); }
+
+  /* --- Controller Components --- */
+  .hud-panel {
+    background: rgba(20, 20, 32, 0.85);
+    border: 1px solid rgba(0, 229, 255, 0.2);
+    backdrop-filter: blur(8px);
+    border-radius: calc(8px * var(--local-scale));
+    padding: calc(12px * var(--local-scale));
+    box-shadow: 0 0 20px rgba(0, 229, 255, 0.05), inset 0 1px 0 rgba(255,255,255,0.03);
+  }
+
+  .btn-action {
+    width: calc(80px * var(--local-scale));
+    height: calc(80px * var(--local-scale));
+    border-radius: 50%; display: flex; align-items: center; justify-content: center;
+    font-family: 'Orbitron', sans-serif; font-weight: 900;
+    font-size: calc(40px * var(--local-scale)); 
+    transition: all 0.08s ease; position: relative; cursor: pointer;
+    border: 2px solid; flex-shrink: 0; touch-action: none;
+  }
+  .btn-action.pressed { transform: scale(0.9); }
+  .btn-action .glow { position: absolute; inset: -4px; border-radius: 50%; opacity: 0; transition: opacity 0.1s; pointer-events: none; }
+  .btn-action.pressed .glow { opacity: 1; }
+
+  .btn-triangle { border-color: #7edc98; color: #7edc98; background: rgba(126,220,152,0.08); }
+  .btn-triangle.pressed { background: rgba(126,220,152,0.3); box-shadow: 0 0 20px rgba(126,220,152,0.4); }
+  .btn-circle { border-color: #ff6b6b; color: #ff6b6b; background: rgba(255,107,107,0.08); }
+  .btn-circle.pressed { background: rgba(255,107,107,0.3); box-shadow: 0 0 20px rgba(255,107,107,0.4); }
+  .btn-cross { border-color: #6ba5ff; color: #6ba5ff; background: rgba(107,165,255,0.08); }
+  .btn-cross.pressed { background: rgba(107,165,255,0.3); box-shadow: 0 0 20px rgba(107,165,255,0.4); }
+  .btn-square { border-color: #d88aff; color: #d88aff; background: rgba(216,138,255,0.08); }
+  .btn-square.pressed { background: rgba(216,138,255,0.3); box-shadow: 0 0 20px rgba(216,138,255,0.4); }
+
+  .dpad-btn {
+    width: calc(56px * var(--local-scale)); height: calc(56px * var(--local-scale));
+    background: rgba(0, 229, 255, 0.06); border: 1px solid rgba(0, 229, 255, 0.25);
+    display: flex; align-items: center; justify-content: center;
+    color: var(--accent); transition: all 0.08s; cursor: pointer; flex-shrink: 0; touch-action: none;
+  }
+  .dpad-btn.pressed { background: rgba(0, 229, 255, 0.3); box-shadow: 0 0 15px rgba(0, 229, 255, 0.4); border-color: var(--accent); }
+
+  .shoulder-btn {
+    padding: calc(10px * var(--local-scale)) calc(24px * var(--local-scale));
+    font-family: 'Orbitron', sans-serif; font-size: calc(13px * var(--local-scale));
+    font-weight: 700; border: 1px solid rgba(0, 229, 255, 0.3);
+    background: rgba(0, 229, 255, 0.06); color: var(--accent);
+    cursor: pointer; border-radius: 6px; flex-shrink: 0; touch-action: none;
+  }
+  .shoulder-btn.pressed { background: rgba(0, 229, 255, 0.3); box-shadow: 0 0 15px rgba(0, 229, 255, 0.3); }
+
+  .meta-btn {
+    padding: calc(8px * var(--local-scale)) calc(20px * var(--local-scale));
+    font-family: 'Orbitron'; font-size: calc(10px * var(--local-scale));
+    border: 1px solid rgba(255, 255, 255, 0.15); background: rgba(255, 255, 255, 0.04);
+    color: rgba(255, 255, 255, 0.5); border-radius: 12px; cursor: pointer; letter-spacing: 1px; touch-action: none;
+  }
+  .meta-btn.pressed { background: rgba(255, 255, 255, 0.15); color: #fff; border-color: rgba(255,255,255,0.4); }
+
+  .stick-zone {
+    width: calc(160px * var(--local-scale)); height: calc(160px * var(--local-scale));
+    border-radius: 50%; background: rgba(0,0,0,0.4); border: 1px solid rgba(0, 229, 255, 0.15);
+    position: relative; touch-action: none; flex-shrink: 0; cursor: crosshair;
+  }
+  .stick-thumb {
+    width: calc(54px * var(--local-scale)); height: calc(54px * var(--local-scale));
+    border-radius: 50%; background: radial-gradient(circle at 40% 35%, rgba(0,229,255,0.3), rgba(0,229,255,0.08));
+    border: 2px solid rgba(0, 229, 255, 0.4); position: absolute; top: 50%; left: 50%;
+    transform: translate(-50%, -50%); pointer-events: none; transition: box-shadow 0.1s;
+  }
+  .stick-thumb.active { box-shadow: 0 0 20px rgba(0, 229, 255, 0.5); border-color: var(--accent); }
+  .stick-crosshair { position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); width: 80%; height: 80%; pointer-events: none; }
+  .stick-crosshair::before, .stick-crosshair::after { content: ''; position: absolute; background: rgba(0, 229, 255, 0.08); }
+  .stick-crosshair::before { width: 1px; height: 100%; left: 50%; top: 0; }
+  .stick-crosshair::after { height: 1px; width: 100%; top: 50%; left: 0; }
+
+  .stick-label-btn {
+    width: calc(32px * var(--local-scale)); height: calc(32px * var(--local-scale));
+    border-radius: 50%; border: 1px solid rgba(0, 229, 255, 0.2);
+    background: rgba(0, 229, 255, 0.04); font-family: 'Orbitron';
+    font-size: calc(10px * var(--local-scale)); color: rgba(0,229,255,0.5);
+    display: flex; align-items: center; justify-content: center; cursor: pointer; flex-shrink: 0; touch-action: none;
+  }
+  .stick-label-btn.pressed { background: rgba(0, 229, 255, 0.3); color: #fff; border-color: var(--accent); }
+
+  .hex-display { font-family: 'JetBrains Mono', monospace; font-size: calc(15px * var(--local-scale)); letter-spacing: 1px; }
+  .byte-cell {
+    display: inline-flex; align-items: center; justify-content: center;
+    width: calc(42px * var(--local-scale)); height: calc(32px * var(--local-scale));
+    background: rgba(0,0,0,0.4); border: 1px solid rgba(0, 229, 255, 0.12); border-radius: 3px;
+    transition: all 0.15s; flex-shrink: 0;
+  }
+  .byte-cell.changed { border-color: var(--accent); box-shadow: 0 0 8px rgba(0, 229, 255, 0.3); color: var(--accent); }
+  .byte-label { font-size: calc(8px * var(--local-scale)); opacity: 0.4; margin-top: calc(4px * var(--local-scale)); text-align: center; }
+
+  .scanline { position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: repeating-linear-gradient(0deg, transparent, transparent 2px, rgba(0,0,0,0.03) 2px, rgba(0,0,0,0.03) 4px); pointer-events: none; z-index: 999; }
+  
+  .pdf-btn { padding: calc(8px * var(--local-scale)) calc(16px * var(--local-scale)); font-family: 'Orbitron', sans-serif; font-size: calc(11px * var(--local-scale)); font-weight: 700; border: 1px solid rgba(255, 61, 113, 0.4); background: rgba(255, 61, 113, 0.08); color: var(--accent2); border-radius: 4px; cursor: pointer; transition: all 0.15s; flex-shrink: 0; display: flex; align-items: center; gap: calc(4px * var(--local-scale)); }
+  .pdf-btn:hover { background: rgba(255, 61, 113, 0.2); }
+
+  @keyframes blink-highlight { 0%, 100% { background: rgba(0, 229, 255, 0.2); } 50% { background: rgba(0, 229, 255, 0.6); } }
+  .settings-blinking { animation: blink-highlight 0.6s ease-in-out infinite; }
+
+  footer { position: fixed; bottom: 0; left: 0; right: 0; padding: 8px 16px; display: flex; justify-content: space-between; align-items: center; font-size: 10px; opacity: 0.4; font-family: 'JetBrains Mono', monospace; pointer-events: none; background: rgba(10,10,15,0.9); z-index: 900;}
+  </style>
+ </head>
+ <body style="background: var(--bg); color: var(--text);">
+  <div id="connectOverlay" style="position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; background: var(--bg); z-index: 9999; display: flex; flex-direction: column; align-items: center; justify-content: center; font-family: 'Orbitron', sans-serif;">
+    <h1 style="color: var(--accent); font-size: 2rem; margin-bottom: 20px; letter-spacing: 2px;">ELVIRA MANDO HUD</h1>
+    
+    <select id="channelSelect" style="margin-bottom: 30px; padding: 12px 24px; background: rgba(0, 229, 255, 0.05); color: var(--accent); border: 1px solid var(--accent); border-radius: 8px; font-family: 'Orbitron', sans-serif; font-size: 1.2rem; cursor: pointer; outline: none;">
+      <option value="1">Channel 1</option> <option value="2">Channel 2</option>
+      <option value="3">Channel 3</option> <option value="4">Channel 4</option>
+      <option value="5">Channel 5</option> <option value="6">Channel 6</option>
+      <option value="7">Channel 7</option> <option value="8">Channel 8</option>
+      <option value="9">Channel 9</option> <option value="10">Channel 10</option>
+    </select>
+
+    <button onclick="connectBluetooth()" style="padding: 16px 32px; font-family: 'Orbitron', sans-serif; font-size: 1.2rem; font-weight: 900; background: rgba(0, 229, 255, 0.1); border: 2px solid var(--accent); color: var(--accent); border-radius: 8px; cursor: pointer; transition: all 0.2s; box-shadow: 0 0 15px rgba(0, 229, 255, 0.2);">
+      CONNECT TO CONTROLLER
+    </button>
+
+    <p id="statusText" style="margin-top: 30px; font-family: 'JetBrains Mono', monospace; color: #ff3d71; font-size: 1rem;"></p>
+  </div>
+  <div class="scanline"></div>
+  <div style="position: fixed; top: 16px; right: 16px; z-index: 1000;">
+   <button class="export-btn" id="settingsBtn" onclick="toggleSettingsMenu()">⚙ SETTINGS</button>
+   <div id="settingsMenu" style="display: none; position: absolute; top: 100%; right: 0; margin-top: 8px; background: rgba(20, 20, 32, 0.95); border: 1px solid rgba(0, 229, 255, 0.3); border-radius: 8px; overflow: hidden; min-width: 200px; z-index: 1000;">
+    <button id="fullscreenBtn" onclick="toggleFullscreen()" style="width: 100%; padding: 12px 16px; text-align: left; background: transparent; border: none; color: var(--accent); font-family: 'Orbitron'; font-size: 12px; cursor: pointer; border-bottom: 1px solid rgba(0, 229, 255, 0.1);"> <i data-lucide="maximize" style="width: 16px; height: 16px; display: inline-block; margin-right: 8px; vertical-align: middle;"></i> <span id="fullscreenLabel">Fullscreen</span> </button> 
+    <button onclick="toggleEditMode()" id="editModeBtn" style="width: 100%; padding: 12px 16px; text-align: left; background: transparent; border: none; color: var(--accent); font-family: 'Orbitron'; font-size: 12px; cursor: pointer; border-bottom: 1px solid rgba(0, 229, 255, 0.1);"> <i data-lucide="move" style="width: 16px; height: 16px; display: inline-block; margin-right: 8px; vertical-align: middle;"></i> <span id="editModeLabel">Layout Editor</span> </button> 
+    <button onclick="resetLayout()" style="width: 100%; padding: 12px 16px; text-align: left; background: transparent; border: none; color: var(--accent); font-family: 'Orbitron'; font-size: 12px; cursor: pointer; border-bottom: 1px solid rgba(0, 229, 255, 0.1);"> <i data-lucide="rotate-ccw" style="width: 16px; height: 16px; display: inline-block; margin-right: 8px; vertical-align: middle;"></i> Reset Layout </button> 
+    <button onclick="exportCode()" style="width: 100%; padding: 12px 16px; text-align: left; background: transparent; border: none; color: var(--accent); font-family: 'Orbitron'; font-size: 12px; cursor: pointer;"> <i data-lucide="download" style="width: 16px; height: 16px; display: inline-block; margin-right: 8px; vertical-align: middle;"></i> Export Layout </button>
+   </div>
+  </div>
+  <div id="workspace">
+   <div class="ui-group" id="group-l1l2" style="left: 5vw; top: 5vh; --local-scale: 1.05;">
+    <div class="drag-handle">≡ L1 / L2</div>
+    <div style="display: flex; flex-direction: column; gap: calc(4px * var(--local-scale));">
+     <button class="shoulder-btn" data-btn="L1">L1</button> 
+     <button class="shoulder-btn" data-btn="L2">L2</button>
     </div>
+    <div class="resize-handle"></div>
+   </div>
+   <div class="ui-group" id="group-r1r2" style="left: 85vw; top: 5vh; --local-scale: 1.05;">
+    <div class="drag-handle">≡ R1 / R2</div>
+    <div style="display: flex; flex-direction: column; gap: calc(4px * var(--local-scale));">
+     <button class="shoulder-btn" data-btn="R1">R1</button> 
+     <button class="shoulder-btn" data-btn="R2">R2</button>
+    </div>
+    <div class="resize-handle"></div>
+   </div>
+   <div class="ui-group" id="group-hudpdf" style="left: 40vw; top: 2vh; --local-scale: 1.05;">
+    <div class="drag-handle">≡ Header</div>
+    <div style="display: flex; flex-direction: column; align-items: center; gap: calc(4px * var(--local-scale));">
+     <h1 id="pageTitle" style="font-family: 'Orbitron', sans-serif; font-size: calc(12px * var(--local-scale)); font-weight: 900; letter-spacing: 3px; color: var(--accent); opacity: 0.7; margin: 0;">PS2 CONTROLLER HUD</h1>
+     <div style="display: flex; align-items: center; gap: calc(8px * var(--local-scale));"><span style="font-size: calc(9px * var(--local-scale)); opacity: 0.4;">MODE: 0x73 ANALOG</span> <button class="pdf-btn" onclick="generatePDF()"><i data-lucide="file-text" style="width: calc(14px * var(--local-scale)); height: calc(14px * var(--local-scale));"></i> PDF REF</button></div>
+    </div>
+    <div class="resize-handle"></div>
+   </div>
+   <div class="ui-group" id="group-rawdata" style="left: 28vw; top: 15vh; --local-scale: 1.05;">
+    <div class="drag-handle">≡ Raw Data Map</div>
+    <div class="hud-panel">
+     <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: calc(8px * var(--local-scale));"><span style="font-size: calc(9px * var(--local-scale)); opacity: 0.4; letter-spacing: 2px;">RAW DATA — uint8_t[9]</span> <span id="dataStatus" style="font-size: calc(9px * var(--local-scale)); color: #ff3d71; font-weight: bold;">● Disconnected</span></div>
+     <div class="hex-display" id="hexDisplay" style="display: flex; gap: calc(4px * var(--local-scale));"></div>
+    </div>
+    <div class="resize-handle"></div>
+   </div>
+   <div class="ui-group" id="group-meta" style="left: 42vw; top: 38vh; --local-scale: 1.05;">
+    <div class="drag-handle">≡ Meta Keys</div>
+    <div style="display: flex; gap: calc(24px * var(--local-scale));">
+     <button class="meta-btn" data-btn="Select">SELECT</button> 
+     <button class="meta-btn" data-btn="Start">START</button>
+    </div>
+    <div class="resize-handle"></div>
+   </div>
+   <div class="ui-group" id="group-dpad" style="left: 10vw; top: 35vh; --local-scale: 1.05;">
+    <div class="drag-handle">≡ D-Pad</div>
+    <div style="display: grid; grid-template-columns: 1fr 1fr 1fr; width: calc(168px * var(--local-scale)); gap: 0;">
+     <div></div><button class="dpad-btn" style="border-radius: 8px 8px 0 0;" data-btn="Up"><svg width="24" height="24" viewbox="0 0 16 16" fill="currentColor"><path d="M8 3L13 11H3z" /></svg></button><div></div>
+     <button class="dpad-btn" style="border-radius: 8px 0 0 8px;" data-btn="Left"><svg width="24" height="24" viewbox="0 0 16 16" fill="currentColor"><path d="M5 8L11 3V13z" /></svg></button>
+     <div class="dpad-btn" style="background: transparent; border-color: transparent; cursor: default;"></div>
+     <button class="dpad-btn" style="border-radius: 0 8px 8px 0;" data-btn="Right"><svg width="24" height="24" viewbox="0 0 16 16" fill="currentColor"><path d="M11 8L5 13V3z" /></svg></button>
+     <div></div><button class="dpad-btn" style="border-radius: 0 0 8px 8px;" data-btn="Down"><svg width="24" height="24" viewbox="0 0 16 16" fill="currentColor"><path d="M8 13L3 5H13z" /></svg></button><div></div>
+    </div>
+    <div class="resize-handle"></div>
+   </div>
+   <div class="ui-group" id="group-actions" style="left: 70vw; top: 35vh; --local-scale: 1.05;">
+    <div class="drag-handle">≡ Actions</div>
+    <div style="display: grid; grid-template-columns: 1fr 1fr 1fr; width: calc(184px * var(--local-scale)); gap: calc(4px * var(--local-scale));">
+     <div></div>
+     <div style="display: flex; justify-content: center;"><button class="btn-action btn-triangle" data-btn="Triangle"><div class="glow"></div><span>△</span></button></div>
+     <div></div>
+     <div style="display: flex; justify-content: flex-end;"><button class="btn-action btn-square" data-btn="Square"><div class="glow"></div><span>▢</span></button></div>
+     <div></div>
+     <div style="display: flex; justify-content: flex-start;"><button class="btn-action btn-circle" data-btn="Circle"><div class="glow"></div><span>◯</span></button></div>
+     <div></div>
+     <div style="display: flex; justify-content: center;"><button class="btn-action btn-cross" data-btn="Cross"><div class="glow"></div><span>✕</span></button></div>
+     <div></div>
+    </div>
+    <div class="resize-handle"></div>
+   </div>
+   <div class="ui-group" id="group-ljoy" style="left: 25vw; top: 60vh; --local-scale: 1.05;">
+    <div class="drag-handle">≡ L-Joy</div>
+    <div class="stick-zone" id="leftStickZone">
+     <div class="stick-crosshair"></div><div class="stick-thumb" id="leftThumb"></div>
+    </div>
+    <div style="display: flex; align-items: center; gap: calc(8px * var(--local-scale));"><button class="stick-label-btn" data-btn="L3">L3</button> <span id="leftStickVal" style="font-family: 'JetBrains Mono', monospace; font-size: calc(11px * var(--local-scale)); opacity: 0.4;">X:80 Y:80</span></div>
+    <div class="resize-handle"></div>
+   </div>
+   <div class="ui-group" id="group-rjoy" style="left: 60vw; top: 60vh; --local-scale: 1.05;">
+    <div class="drag-handle">≡ R-Joy</div>
+    <div class="stick-zone" id="rightStickZone">
+     <div class="stick-crosshair"></div><div class="stick-thumb" id="rightThumb"></div>
+    </div>
+    <div style="display: flex; align-items: center; gap: calc(8px * var(--local-scale));"><button class="stick-label-btn" data-btn="R3">R3</button> <span id="rightStickVal" style="font-family: 'JetBrains Mono', monospace; font-size: calc(11px * var(--local-scale)); opacity: 0.4;">X:80 Y:80</span></div>
+    <div class="resize-handle"></div>
+   </div>
+  </div>
+  <footer><span>DUALSHOCK 2 — HID EMULATOR</span> <span id="clock"></span></footer>
+  
+  <script>
+// ===== SETTINGS & UI MENU =====
+let editModeActive = false;
 
-    <script src="app.js"></script>
+function toggleSettingsMenu() {
+  const menu = document.getElementById('settingsMenu');
+  menu.style.display = menu.style.display === 'none' ? 'block' : 'none';
+}
+
+document.addEventListener('click', (e) => {
+  const menu = document.getElementById('settingsMenu');
+  const btn = document.getElementById('settingsBtn');
+  if (!menu.contains(e.target) && !btn.contains(e.target)) {
+    menu.style.display = 'none';
+  }
+});
+
+function toggleFullscreen() {
+  if (!document.fullscreenElement) {
+    document.documentElement.requestFullscreen().catch(err => console.error(err));
+    document.getElementById('fullscreenLabel').textContent = 'Exit Fullscreen';
+  } else {
+    document.exitFullscreen();
+    document.getElementById('fullscreenLabel').textContent = 'Fullscreen';
+  }
+  document.getElementById('settingsMenu').style.display = 'none';
+}
+
+function showToast(msgText) {
+  const msg = document.createElement('div');
+  msg.textContent = msgText;
+  msg.style.cssText = 'position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%); background: rgba(0, 229, 255, 0.2); border: 1px solid var(--accent); color: var(--accent); padding: 16px 32px; border-radius: 8px; font-family: Orbitron; z-index: 10002; pointer-events: none;';
+  document.body.appendChild(msg);
+  setTimeout(() => msg.remove(), 2000);
+}
+
+function toggleEditMode() {
+  editModeActive = !editModeActive;
+  const workspace = document.getElementById('workspace');
+  const editBtn = document.getElementById('editModeBtn');
+  const settingsBtn = document.getElementById('settingsBtn');
+  const editModeLabel = document.getElementById('editModeLabel');
+  
+  if (editModeActive) {
+    workspace.style.cursor = 'grab';
+    editBtn.style.background = 'rgba(0, 229, 255, 0.3)';
+    editModeLabel.textContent = 'Save Layout';
+    settingsBtn.classList.add('settings-blinking');
+    document.body.classList.add('edit-mode-active');
+  } else {
+    workspace.style.cursor = 'default';
+    editBtn.style.background = 'transparent';
+    editModeLabel.textContent = 'Layout Editor';
+    settingsBtn.classList.remove('settings-blinking');
+    document.body.classList.remove('edit-mode-active');
+    saveLayout();
+  }
+  document.getElementById('settingsMenu').style.display = 'none';
+}
+
+function saveLayout() {
+  const layout = {};
+  document.querySelectorAll('.ui-group').forEach(group => {
+    layout[group.id] = { left: group.style.left, top: group.style.top, scale: getComputedStyle(group).getPropertyValue('--local-scale').trim() };
+  });
+  localStorage.setItem('ps2HudLayout', JSON.stringify(layout));
+  showToast('✓ Layout saved!');
+}
+
+function resetLayout() {
+  localStorage.removeItem('ps2HudLayout');
+  const defaultLayouts = {
+    'group-l1l2': { left: '5vw', top: '5vh' }, 'group-r1r2': { left: '85vw', top: '5vh' },
+    'group-hudpdf': { left: '40vw', top: '2vh' }, 'group-rawdata': { left: '28vw', top: '15vh' },
+    'group-meta': { left: '42vw', top: '38vh' }, 'group-dpad': { left: '10vw', top: '35vh' },
+    'group-actions': { left: '70vw', top: '35vh' }, 'group-ljoy': { left: '25vw', top: '60vh' },
+    'group-rjoy': { left: '60vw', top: '60vh' }
+  };
+  document.querySelectorAll('.ui-group').forEach(group => {
+    if (defaultLayouts[group.id]) {
+      group.style.left = defaultLayouts[group.id].left;
+      group.style.top = defaultLayouts[group.id].top;
+      group.style.setProperty('--local-scale', '1.05');
+    }
+  });
+  showToast('↻ Layout reset to default!');
+  document.getElementById('settingsMenu').style.display = 'none';
+}
+
+function loadLayout() {
+  const saved = localStorage.getItem('ps2HudLayout');
+  if (saved) {
+    const layout = JSON.parse(saved);
+    document.querySelectorAll('.ui-group').forEach(group => {
+      if (layout[group.id]) {
+        group.style.left = layout[group.id].left;
+        group.style.top = layout[group.id].top;
+        group.style.setProperty('--local-scale', layout[group.id].scale);
+      }
+    });
+  }
+}
+
+// ===== STATE & DATA =====
+let isConnected = false;
+const ps2Data = new Uint8Array([0xFF, 0x73, 0x5A, 0xFF, 0xFF, 0x80, 0x80, 0x80, 0x80]);
+const byteNames = ['HDR','MODE','ACK','BTN1','BTN2','RX','RY','LX','LY'];
+const btnMap = {
+  Select: [3, 0x01], L3: [3, 0x02], R3: [3, 0x04], Start: [3, 0x08],
+  Up: [3, 0x10], Right: [3, 0x20], Down: [3, 0x40], Left: [3, 0x80],
+  L2: [4, 0x01], R2: [4, 0x02], L1: [4, 0x04], R1: [4, 0x08],
+  Triangle: [4, 0x10], Circle: [4, 0x20], Cross: [4, 0x40], Square: [4, 0x80],
+};
+
+function checkConnection() {
+  if (!isConnected) {
+    isConnected = true;
+    const status = document.getElementById('dataStatus');
+    status.textContent = '● Connected';
+    status.style.color = 'var(--accent)';
+  }
+}
+
+// ===== HEX DISPLAY =====
+function buildHexDisplay() {
+  const container = document.getElementById('hexDisplay');
+  container.innerHTML = '';
+  for (let i = 0; i < 9; i++) {
+    const col = document.createElement('div'); col.style.display = 'flex'; col.style.flexDirection = 'column'; col.style.alignItems = 'center';
+    const cell = document.createElement('span'); cell.className = 'byte-cell'; cell.id = 'byte' + i; cell.textContent = '0x' + ps2Data[i].toString(16).toUpperCase().padStart(2, '0');
+    const lbl = document.createElement('span'); lbl.className = 'byte-label'; lbl.textContent = byteNames[i];
+    col.appendChild(cell); col.appendChild(lbl); container.appendChild(col);
+  }
+}
+
+function updateHexDisplay() {
+  for (let i = 0; i < 9; i++) {
+    const cell = document.getElementById('byte' + i);
+    const hex = '0x' + ps2Data[i].toString(16).toUpperCase().padStart(2, '0');
+    if (cell.textContent !== hex) {
+      cell.textContent = hex;
+      cell.classList.add('changed');
+      setTimeout(() => cell.classList.remove('changed'), 300);
+    }
+  }
+}
+
+// ===== TRUE MULTI-TOUCH INPUT HANDLING =====
+function pressBtn(el) {
+  checkConnection();
+  const name = el.dataset.btn; if (!name || !btnMap[name]) return;
+  el.classList.add('pressed');
+  ps2Data[btnMap[name][0]] &= ~btnMap[name][1];
+  updateHexDisplay();
+}
+
+function releaseBtn(el) {
+  const name = el.dataset.btn; if (!name || !btnMap[name]) return;
+  el.classList.remove('pressed');
+  ps2Data[btnMap[name][0]] |= btnMap[name][1];
+  updateHexDisplay();
+}
+
+// Map to track which Touch ID is currently pressing which button
+const activeButtons = new Map();
+
+document.querySelectorAll('[data-btn]').forEach(btn => {
+  // Mouse
+  btn.addEventListener('mousedown', (e) => { if (e.button !== 0 || editModeActive) return; pressBtn(btn); });
+  btn.addEventListener('mouseup', () => { if (!editModeActive) releaseBtn(btn); });
+  btn.addEventListener('mouseleave', () => { if (!editModeActive) releaseBtn(btn); });
+
+  // Touch - Register the specific touch ID to this button
+  btn.addEventListener('touchstart', (e) => {
+    if (editModeActive) return;
+    e.preventDefault(); 
+    for (let i = 0; i < e.changedTouches.length; i++) {
+      const t = e.changedTouches[i];
+      if (!activeButtons.has(t.identifier)) {
+        activeButtons.set(t.identifier, btn);
+        pressBtn(btn);
+      }
+    }
+  }, { passive: false });
+});
+
+// Global touch end logic for buttons (safely releases if finger slides off)
+function handleButtonTouchEnd(e) {
+  for (let i = 0; i < e.changedTouches.length; i++) {
+    const t = e.changedTouches[i];
+    if (activeButtons.has(t.identifier)) {
+      releaseBtn(activeButtons.get(t.identifier));
+      activeButtons.delete(t.identifier);
+    }
+  }
+}
+window.addEventListener('touchend', handleButtonTouchEnd);
+window.addEventListener('touchcancel', handleButtonTouchEnd);
+
+
+// Multi-touch safe Joystick Logic
+function initStick(zoneId, thumbId, valId, xByteIdx, yByteIdx) {
+  const zone = document.getElementById(zoneId);
+  const thumb = document.getElementById(thumbId);
+  const valEl = document.getElementById(valId);
+  
+  let active = false;
+  let activeTouchId = null; // Tracks which finger owns THIS joystick
+
+  function move(clientX, clientY) {
+    if (editModeActive) return;
+    checkConnection();
+    const rect = zone.getBoundingClientRect();
+    const cx = rect.left + rect.width / 2;
+    const cy = rect.top + rect.height / 2;
+    const maxR = rect.width / 2 - 22;
+    
+    let dx = clientX - cx;
+    let dy = clientY - cy;
+    const dist = Math.sqrt(dx * dx + dy * dy);
+    if (dist > maxR) { dx = dx / dist * maxR; dy = dy / dist * maxR; }
+
+    thumb.style.transform = `translate(calc(-50% + ${dx}px), calc(-50% + ${dy}px))`;
+
+    const xVal = Math.round(128 + (dx / maxR) * 127);
+    const yVal = Math.round(128 + (dy / maxR) * 127);
+    ps2Data[xByteIdx] = Math.max(0, Math.min(255, xVal));
+    ps2Data[yByteIdx] = Math.max(0, Math.min(255, yVal));
+
+    valEl.textContent = 'X:' + ps2Data[xByteIdx].toString(16).toUpperCase().padStart(2,'0') + ' Y:' + ps2Data[yByteIdx].toString(16).toUpperCase().padStart(2,'0');
+    updateHexDisplay();
+  }
+
+  function stop() {
+    active = false;
+    activeTouchId = null;
+    thumb.classList.remove('active');
+    thumb.style.transform = 'translate(-50%, -50%)';
+    ps2Data[xByteIdx] = 0x80; ps2Data[yByteIdx] = 0x80;
+    valEl.textContent = 'X:80 Y:80';
+    updateHexDisplay();
+  }
+
+  // Joystick Mouse
+  zone.addEventListener('mousedown', (e) => { 
+    if (editModeActive) return;
+    active = true; thumb.classList.add('active'); move(e.clientX, e.clientY); 
+  });
+  window.addEventListener('mousemove', (e) => { 
+    if (active && !editModeActive && activeTouchId === null) move(e.clientX, e.clientY); 
+  });
+  window.addEventListener('mouseup', () => { 
+    if (active && activeTouchId === null) stop(); 
+  });
+
+  // Joystick Touch - Grab the ID of the finger that touched the zone
+  zone.addEventListener('touchstart', (e) => {
+    if (editModeActive) return;
+    e.preventDefault(); 
+    for (let i = 0; i < e.changedTouches.length; i++) {
+      if (activeTouchId === null) {
+        activeTouchId = e.changedTouches[i].identifier;
+        active = true;
+        thumb.classList.add('active');
+        move(e.changedTouches[i].clientX, e.changedTouches[i].clientY);
+        break;
+      }
+    }
+  }, { passive: false });
+  
+  // Only move if the specific finger assigned to this joystick moves
+  window.addEventListener('touchmove', (e) => {
+    if (active && !editModeActive && activeTouchId !== null) {
+      for (let i = 0; i < e.changedTouches.length; i++) {
+        if (e.changedTouches[i].identifier === activeTouchId) {
+          e.preventDefault(); // Stop screen dragging
+          move(e.changedTouches[i].clientX, e.changedTouches[i].clientY);
+          break;
+        }
+      }
+    }
+  }, { passive: false });
+  
+  // Only stop if the specific finger assigned to this joystick lifts
+  window.addEventListener('touchend', (e) => {
+    if (active && activeTouchId !== null) {
+      for (let i = 0; i < e.changedTouches.length; i++) {
+        if (e.changedTouches[i].identifier === activeTouchId) {
+          stop();
+          break;
+        }
+      }
+    }
+  });
+  
+  window.addEventListener('touchcancel', (e) => {
+    if (active && activeTouchId !== null) {
+      for (let i = 0; i < e.changedTouches.length; i++) {
+        if (e.changedTouches[i].identifier === activeTouchId) {
+          stop();
+          break;
+        }
+      }
+    }
+  });
+}
+
+// ===== DRAG & RESIZE WITH MULTI-TOUCH SUPPORT (Edit Mode) =====
+document.querySelectorAll('.ui-group').forEach(group => {
+  const dragHandle = group.querySelector('.drag-handle');
+  const resizeHandle = group.querySelector('.resize-handle');
+  
+  dragHandle.addEventListener('mousedown', (e) => {
+    if (!editModeActive) return; e.preventDefault();
+    let startX = e.clientX, startY = e.clientY; let rect = group.getBoundingClientRect(); let offX = startX - rect.left; let offY = startY - rect.top;
+    function move(e) { group.style.left = (e.clientX - offX) + 'px'; group.style.top = (e.clientY - offY) + 'px'; }
+    function stop() { document.removeEventListener('mousemove', move); document.removeEventListener('mouseup', stop); }
+    document.addEventListener('mousemove', move); document.addEventListener('mouseup', stop);
+  });
+
+  dragHandle.addEventListener('touchstart', (e) => {
+    if (!editModeActive) return; e.preventDefault();
+    const touch = e.touches[0]; const touchId = touch.identifier;
+    let rect = group.getBoundingClientRect(); let offX = touch.clientX - rect.left; let offY = touch.clientY - rect.top;
+    function move(e) {
+      const currentTouch = Array.from(e.touches).find(t => t.identifier === touchId);
+      if (currentTouch) { group.style.left = (currentTouch.clientX - offX) + 'px'; group.style.top = (currentTouch.clientY - offY) + 'px'; }
+    }
+    function stop(e) {
+      if (Array.from(e.changedTouches).some(t => t.identifier === touchId)) {
+        document.removeEventListener('touchmove', move); document.removeEventListener('touchend', stop);
+      }
+    }
+    document.addEventListener('touchmove', move, { passive: false }); document.addEventListener('touchend', stop);
+  });
+
+  resizeHandle.addEventListener('mousedown', (e) => {
+    if (!editModeActive) return; e.preventDefault();
+    let startY = e.clientY; let startScale = parseFloat(getComputedStyle(group).getPropertyValue('--local-scale'));
+    function move(e) { let dy = e.clientY - startY; let newScale = Math.max(0.5, Math.min(2.5, startScale + (dy * 0.005))); group.style.setProperty('--local-scale', newScale.toFixed(2)); }
+    function stop() { document.removeEventListener('mousemove', move); document.removeEventListener('mouseup', stop); }
+    document.addEventListener('mousemove', move); document.addEventListener('mouseup', stop);
+  });
+
+  resizeHandle.addEventListener('touchstart', (e) => {
+    if (!editModeActive) return; e.preventDefault();
+    const touch = e.touches[0]; const touchId = touch.identifier;
+    let startY = touch.clientY; let startScale = parseFloat(getComputedStyle(group).getPropertyValue('--local-scale'));
+    function move(e) {
+      const currentTouch = Array.from(e.touches).find(t => t.identifier === touchId);
+      if (currentTouch) { let dy = currentTouch.clientY - startY; let newScale = Math.max(0.5, Math.min(2.5, startScale + (dy * 0.005))); group.style.setProperty('--local-scale', newScale.toFixed(2)); }
+    }
+    function stop(e) {
+      if (Array.from(e.changedTouches).some(t => t.identifier === touchId)) {
+        document.removeEventListener('touchmove', move); document.removeEventListener('touchend', stop);
+      }
+    }
+    document.addEventListener('touchmove', move, { passive: false }); document.addEventListener('touchend', stop);
+  });
+});
+
+// ===== PDF GENERATOR =====
+function generatePDF() {
+  const w = 800, h = 1100;
+  let svg = `<svg xmlns="http://www.w3.org/2000/svg" width="${w}" height="${h}" viewBox="0 0 ${w} ${h}" style="font-family:monospace;">`;
+  svg += `<rect width="${w}" height="${h}" fill="#0a0a0f"/><text x="400" y="50" fill="#00e5ff" font-size="24" text-anchor="middle" font-weight="bold">PS2 DUALSHOCK 2 — HUD LAYOUT REFERENCE</text><text x="400" y="80" fill="#666" font-size="12" text-anchor="middle">Button &amp; Joystick Placement Guide</text><rect x="100" y="120" width="600" height="400" rx="40" fill="none" stroke="#00e5ff" stroke-width="1" opacity="0.3"/><rect x="120" y="130" width="80" height="30" rx="6" fill="none" stroke="#00e5ff" stroke-width="1"/><text x="160" y="150" fill="#00e5ff" font-size="11" text-anchor="middle">L1</text><rect x="120" y="100" width="80" height="25" rx="6" fill="none" stroke="#00e5ff" stroke-width="1"/><text x="160" y="117" fill="#00e5ff" font-size="11" text-anchor="middle">L2</text><rect x="600" y="130" width="80" height="30" rx="6" fill="none" stroke="#00e5ff" stroke-width="1"/><text x="640" y="150" fill="#00e5ff" font-size="11" text-anchor="middle">R1</text><rect x="600" y="100" width="80" height="25" rx="6" fill="none" stroke="#00e5ff" stroke-width="1"/><text x="640" y="117" fill="#00e5ff" font-size="11" text-anchor="middle">R2</text><rect x="170" y="230" width="40" height="40" fill="none" stroke="#00e5ff" stroke-width="1"/><text x="190" y="255" fill="#00e5ff" font-size="9" text-anchor="middle">UP</text><rect x="130" y="270" width="40" height="40" fill="none" stroke="#00e5ff" stroke-width="1"/><text x="150" y="295" fill="#00e5ff" font-size="9" text-anchor="middle">LEFT</text><rect x="210" y="270" width="40" height="40" fill="none" stroke="#00e5ff" stroke-width="1"/><text x="230" y="295" fill="#00e5ff" font-size="9" text-anchor="middle">RIGHT</text><rect x="170" y="310" width="40" height="40" fill="none" stroke="#00e5ff" stroke-width="1"/><text x="190" y="335" fill="#00e5ff" font-size="9" text-anchor="middle">DOWN</text><circle cx="610" cy="250" r="25" fill="none" stroke="#7edc98" stroke-width="1.5"/><text x="610" y="255" fill="#7edc98" font-size="11" text-anchor="middle">△</text><circle cx="650" cy="290" r="25" fill="none" stroke="#ff6b6b" stroke-width="1.5"/><text x="650" y="295" fill="#ff6b6b" font-size="11" text-anchor="middle">○</text><circle cx="610" cy="330" r="25" fill="none" stroke="#6ba5ff" stroke-width="1.5"/><text x="610" y="335" fill="#6ba5ff" font-size="11" text-anchor="middle">✕</text><circle cx="570" cy="290" r="25" fill="none" stroke="#d88aff" stroke-width="1.5"/><text x="570" y="295" fill="#d88aff" font-size="11" text-anchor="middle">□</text>`;
+  const tableY = 560;
+  svg += `<text x="400" y="${tableY}" fill="#00e5ff" font-size="16" text-anchor="middle" font-weight="bold">RAW DATA MAP — 9 BYTES</text><line x1="100" y1="${tableY+10}" x2="700" y2="${tableY+10}" stroke="#00e5ff" stroke-width="0.5" opacity="0.3"/>`;
+  const rows = [ ['Byte','Index','Default','Description'], ['00','HDR','0xFF','Reply Header (constant)'], ['01','MODE','0x73','Analog Mode ID'], ['02','ACK','0x5A','Acknowledge (constant)'], ['03','BTN1','0xFF','D-Pad, Start, Select, L3, R3'], ['04','BTN2','0xFF','△ ○ ✕ □, L1 R1 L2 R2'], ['05','RX','0x80','Right Stick X (0-255)'], ['06','RY','0x80','Right Stick Y (0-255)'], ['07','LX','0x80','Left Stick X (0-255)'], ['08','LY','0x80','Left Stick Y (0-255)'], ];
+  rows.forEach((row, i) => { const y = tableY + 35 + i * 22, isHdr = i === 0, c = isHdr ? '#00e5ff' : '#ccc', fs = isHdr ? 11 : 10; svg += `<text x="130" y="${y}" fill="${c}" font-size="${fs}">${row[0]}</text><text x="220" y="${y}" fill="${c}" font-size="${fs}">${row[1]}</text><text x="330" y="${y}" fill="${c}" font-size="${fs}">${row[2]}</text><text x="430" y="${y}" fill="${c}" font-size="${fs}">${row[3]}</text>`; });
+  svg += `</svg>`;
+  const blob = new Blob([svg], { type: 'image/svg+xml' }); const a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = 'ps2_layout_ref.svg'; document.body.appendChild(a); a.click(); document.body.removeChild(a);
+}
+
+// ===== UTIL & INIT =====
+function updateClock() { document.getElementById('clock').textContent = new Date().toLocaleTimeString('en-US', { hour12: false }); }
+function exportCode() { const blob = new Blob([document.documentElement.outerHTML], { type: 'text/html' }); const a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = 'DualShock2_HUD_Builder.html'; document.body.appendChild(a); a.click(); document.body.removeChild(a); }
+
+loadLayout(); buildHexDisplay();
+initStick('leftStickZone', 'leftThumb', 'leftStickVal', 7, 8);
+initStick('rightStickZone', 'rightThumb', 'rightStickVal', 5, 6);
+updateClock(); setInterval(updateClock, 1000);
+lucide.createIcons();
+// ===== BLUETOOTH COMMS & DATA COMPRESSION =====
+const MICROBIT_TX_UUID = "6e400002-b5a3-f393-e0a9-e50e24dcca9e"; // Handshake listener
+const MICROBIT_RX_UUID = "6e400003-b5a3-f393-e0a9-e50e24dcca9e"; // Controller data sender
+
+let btServer, listenChar, writeChar;
+const connectOverlay = document.getElementById('connectOverlay');
+const channelSelect = document.getElementById('channelSelect');
+const statusText = document.getElementById('statusText');
+
+async function connectBluetooth() {
+    try {
+        statusText.innerText = "Scanning for Micro:Bit...";
+        let device = await navigator.bluetooth.requestDevice({
+            filters: [{ namePrefix: 'BBC micro:bit' }],
+            optionalServices: ["6e400001-b5a3-f393-e0a9-e50e24dcca9e"]
+        });
+
+        btServer = await device.gatt.connect();
+        const service = await btServer.getPrimaryService("6e400001-b5a3-f393-e0a9-e50e24dcca9e");
+        
+        listenChar = await service.getCharacteristic(MICROBIT_TX_UUID);
+        await listenChar.startNotifications();
+        listenChar.addEventListener('characteristicvaluechanged', handleHandshake);
+
+        writeChar = await service.getCharacteristic(MICROBIT_RX_UUID);
+        statusText.innerText = "Connected! Waiting for handshake...";
+    } catch (error) {
+        console.error(error);
+        statusText.innerText = "Connection Failed or Cancelled.";
+    }
+}
+
+function handleHandshake(event) {
+    let message = new TextDecoder('utf-8').decode(event.target.value).trim();
+    if (message.includes("HANDSHAKE")) {
+        let hwChannel = message.split(":")[1];
+        if (hwChannel === channelSelect.value) {
+            connectOverlay.style.display = 'none'; // Success! Reveal the HUD!
+            checkConnection(); 
+        } else {
+            statusText.innerText = `Error: App expected Ch ${channelSelect.value}, got Ch ${hwChannel}`;
+        }
+    }
+}
+
+// Convert uint8_t[9] into an 18-char hex string (e.g. "FF735AFFFF80808080\n")
+function sendControllerData() {
+    if (!writeChar) return;
+    let hexString = Array.from(ps2Data).map(b => b.toString(16).toUpperCase().padStart(2, '0')).join('') + '\n';
+    let payload = new TextEncoder().encode(hexString);
+    writeChar.writeValueWithoutResponse(payload).catch(e => console.error(e));
+}
+
+// Hook into the HUD's visual hex updater to also fire the Bluetooth data simultaneously
+const originalUpdateHexDisplay = updateHexDisplay;
+updateHexDisplay = function() {
+    originalUpdateHexDisplay(); 
+    sendControllerData();       
+};
+</script>
 </body>
 </html>
