@@ -62,9 +62,9 @@ function handleMicrobitMessage(event) {
 }
 
 let heartbeatInterval = null;
-let sequenceCounter = 0; // Add our new rolling counter!
+let sequenceCounter = 0; // The rolling counter
 
-// The function that physically sends the data
+// The function that physically sends the data AND updates the screen
 function sendControllerData() {
     if (!writeChar) return;
     
@@ -72,7 +72,13 @@ function sendControllerData() {
     ps2Data[0] = sequenceCounter;
     sequenceCounter = (sequenceCounter + 1) % 256; 
     
-    // 2. Convert the array to hex and send it
+    // 2. FORCE THE HUD TO UPDATE VISUALLY!
+    // This makes the HDR bit spin wildly on your screen so you know it's working
+    if (typeof updateHexDisplay === 'function') {
+        updateHexDisplay(); 
+    }
+
+    // 3. Convert the array to hex and send it
     let hexString = Array.from(ps2Data).map(b => b.toString(16).toUpperCase().padStart(2, '0')).join('') + '\n';
     let payload = new TextEncoder().encode(hexString);
     writeChar.writeValueWithoutResponse(payload).catch(e => console.log("Packet dropped, retrying..."));
@@ -93,9 +99,11 @@ function handleHandshake(event) {
             connectOverlay.style.display = 'none'; // Success! Reveal the HUD!
             checkConnection(); 
             
-            // --- START THE HIGH-SPEED HEARTBEAT (10ms) ---
+            // --- START THE HEARTBEAT AT 50ms ---
+            // 50ms is the "Goldilocks Zone". It's fast enough for zero-latency 
+            // robot control, but slow enough that the Micro:bit buffer never overflows!
             if (heartbeatInterval) clearInterval(heartbeatInterval);
-            heartbeatInterval = setInterval(sendControllerData, 10); 
+            heartbeatInterval = setInterval(sendControllerData, 50); 
             
         } else {
             statusText.innerText = `Error: App expected Ch ${channelSelect.value}, got Ch ${hwChannel}`;
