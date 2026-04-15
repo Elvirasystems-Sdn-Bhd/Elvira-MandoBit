@@ -1,13 +1,11 @@
-<!doctype html>
-<html lang="en" class="h-full">
- <head>
+<html lang="en" class="h-full"><head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no, maximum-scale=1.0">
   <title>PS2 DualShock HUD Controller Builder</title>
   <script src="https://cdn.tailwindcss.com/3.4.17"></script>
   <script src="/_sdk/element_sdk.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/lucide@0.263.0/dist/umd/lucide.min.js"></script>
-  <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;700&family=Orbitron:wght@400;700;900&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;700&amp;family=Orbitron:wght@400;700;900&amp;display=swap" rel="stylesheet">
   <style>
   html, body { height: 100%; margin: 0; padding: 0; overflow: hidden; touch-action: none; user-select: none; -webkit-user-select: none; }
 
@@ -190,9 +188,9 @@
     animation: handshake-bounce 0.6s ease-in-out infinite;
   }
   </style>
- </head>
- <body style="background: var(--bg); color: var(--text);">
-  <div id="connectOverlay" style="position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; background: var(--bg); z-index: 9999; display: flex; flex-direction: column; align-items: center; justify-content: center; font-family: 'Orbitron', sans-serif;">
+ <style>*, ::before, ::after{--tw-border-spacing-x:0;--tw-border-spacing-y:0;--tw-translate-x:0;--tw-translate-y:0;--tw-rotate:0;--tw-skew-x:0;--tw-skew-y:0;--tw-scale-x:1;--tw-scale-y:1;--tw-pan-x: ;--tw-pan-y: ;--tw-pinch-zoom: ;--tw-scroll-snap-strictness:proximity;--tw-gradient-from-position: ;--tw-gradient-via-position: ;--tw-gradient-to-position: ;--tw-ordinal: ;--tw-slashed-zero: ;--tw-numeric-figure: ;--tw-numeric-spacing: ;--tw-numeric-fraction: ;--tw-ring-inset: ;--tw-ring-offset-width:0px;--tw-ring-offset-color:#fff;--tw-ring-color:rgb(59 130 246 / 0.5);--tw-ring-offset-shadow:0 0 #0000;--tw-ring-shadow:0 0 #0000;--tw-shadow:0 0 #0000;--tw-shadow-colored:0 0 #0000;--tw-blur: ;--tw-brightness: ;--tw-contrast: ;--tw-grayscale: ;--tw-hue-rotate: ;--tw-invert: ;--tw-saturate: ;--tw-sepia: ;--tw-drop-shadow: ;--tw-backdrop-blur: ;--tw-backdrop-brightness: ;--tw-backdrop-contrast: ;--tw-backdrop-grayscale: ;--tw-backdrop-hue-rotate: ;--tw-backdrop-invert: ;--tw-backdrop-opacity: ;--tw-backdrop-saturate: ;--tw-backdrop-sepia: ;--tw-contain-size: ;--tw-contain-layout: ;--tw-contain-paint: ;--tw-contain-style: }::backdrop{--tw-border-spacing-x:0;--tw-border-spacing-y:0;--tw-translate-x:0;--tw-translate-y:0;--tw-rotate:0;--tw-skew-x:0;--tw-skew-y:0;--tw-scale-x:1;--tw-scale-y:1;--tw-pan-x: ;--tw-pan-y: ;--tw-pinch-zoom: ;--tw-scroll-snap-strictness:proximity;--tw-gradient-from-position: ;--tw-gradient-via-position: ;--tw-gradient-to-position: ;--tw-ordinal: ;--tw-slashed-zero: ;--tw-numeric-figure: ;--tw-numeric-spacing: ;--tw-numeric-fraction: ;--tw-ring-inset: ;--tw-ring-offset-width:0px;--tw-ring-offset-color:#fff;--tw-ring-color:rgb(59 130 246 / 0.5);--tw-ring-offset-shadow:0 0 #0000;--tw-ring-shadow:0 0 #0000;--tw-shadow:0 0 #0000;--tw-shadow-colored:0 0 #0000;--tw-blur: ;--tw-brightness: ;--tw-contrast: ;--tw-grayscale: ;--tw-hue-rotate: ;--tw-invert: ;--tw-saturate: ;--tw-sepia: ;--tw-drop-shadow: ;--tw-backdrop-blur: ;--tw-backdrop-brightness: ;--tw-backdrop-contrast: ;--tw-backdrop-grayscale: ;--tw-backdrop-hue-rotate: ;--tw-backdrop-invert: ;--tw-backdrop-opacity: ;--tw-backdrop-saturate: ;--tw-backdrop-sepia: ;--tw-contain-size: ;--tw-contain-layout: ;--tw-contain-paint: ;--tw-contain-style: }/* ! tailwindcss v3.4.17 | MIT License | https://tailwindcss.com */*,::after,::before{box-sizing:border-box;border-width:0;border-style:solid;border-color:#e5e7eb}::after,::before{--tw-content:''}:host,html{line-height:1.5;-webkit-text-size-adjust:100%;-moz-tab-size:4;tab-size:4;font-family:ui-sans-serif, system-ui, sans-serif, "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol", "Noto Color Emoji";font-feature-settings:normal;font-variation-settings:normal;-webkit-tap-highlight-color:transparent}body{margin:0;line-height:inherit}hr{height:0;color:inherit;border-top-width:1px}abbr:where([title]){-webkit-text-decoration:underline dotted;text-decoration:underline dotted}h1,h2,h3,h4,h5,h6{font-size:inherit;font-weight:inherit}a{color:inherit;text-decoration:inherit}b,strong{font-weight:bolder}code,kbd,pre,samp{font-family:ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;font-feature-settings:normal;font-variation-settings:normal;font-size:1em}small{font-size:80%}sub,sup{font-size:75%;line-height:0;position:relative;vertical-align:baseline}sub{bottom:-.25em}sup{top:-.5em}table{text-indent:0;border-color:inherit;border-collapse:collapse}button,input,optgroup,select,textarea{font-family:inherit;font-feature-settings:inherit;font-variation-settings:inherit;font-size:100%;font-weight:inherit;line-height:inherit;letter-spacing:inherit;color:inherit;margin:0;padding:0}button,select{text-transform:none}button,input:where([type=button]),input:where([type=reset]),input:where([type=submit]){-webkit-appearance:button;background-color:transparent;background-image:none}:-moz-focusring{outline:auto}:-moz-ui-invalid{box-shadow:none}progress{vertical-align:baseline}::-webkit-inner-spin-button,::-webkit-outer-spin-button{height:auto}[type=search]{-webkit-appearance:textfield;outline-offset:-2px}::-webkit-search-decoration{-webkit-appearance:none}::-webkit-file-upload-button{-webkit-appearance:button;font:inherit}summary{display:list-item}blockquote,dd,dl,figure,h1,h2,h3,h4,h5,h6,hr,p,pre{margin:0}fieldset{margin:0;padding:0}legend{padding:0}menu,ol,ul{list-style:none;margin:0;padding:0}dialog{padding:0}textarea{resize:vertical}input::placeholder,textarea::placeholder{opacity:1;color:#9ca3af}[role=button],button{cursor:pointer}:disabled{cursor:default}audio,canvas,embed,iframe,img,object,svg,video{display:block;vertical-align:middle}img,video{max-width:100%;height:auto}[hidden]:where(:not([hidden=until-found])){display:none}.h-full{height:100%}</style><style>*, ::before, ::after{--tw-border-spacing-x:0;--tw-border-spacing-y:0;--tw-translate-x:0;--tw-translate-y:0;--tw-rotate:0;--tw-skew-x:0;--tw-skew-y:0;--tw-scale-x:1;--tw-scale-y:1;--tw-pan-x: ;--tw-pan-y: ;--tw-pinch-zoom: ;--tw-scroll-snap-strictness:proximity;--tw-gradient-from-position: ;--tw-gradient-via-position: ;--tw-gradient-to-position: ;--tw-ordinal: ;--tw-slashed-zero: ;--tw-numeric-figure: ;--tw-numeric-spacing: ;--tw-numeric-fraction: ;--tw-ring-inset: ;--tw-ring-offset-width:0px;--tw-ring-offset-color:#fff;--tw-ring-color:rgb(59 130 246 / 0.5);--tw-ring-offset-shadow:0 0 #0000;--tw-ring-shadow:0 0 #0000;--tw-shadow:0 0 #0000;--tw-shadow-colored:0 0 #0000;--tw-blur: ;--tw-brightness: ;--tw-contrast: ;--tw-grayscale: ;--tw-hue-rotate: ;--tw-invert: ;--tw-saturate: ;--tw-sepia: ;--tw-drop-shadow: ;--tw-backdrop-blur: ;--tw-backdrop-brightness: ;--tw-backdrop-contrast: ;--tw-backdrop-grayscale: ;--tw-backdrop-hue-rotate: ;--tw-backdrop-invert: ;--tw-backdrop-opacity: ;--tw-backdrop-saturate: ;--tw-backdrop-sepia: ;--tw-contain-size: ;--tw-contain-layout: ;--tw-contain-paint: ;--tw-contain-style: }::backdrop{--tw-border-spacing-x:0;--tw-border-spacing-y:0;--tw-translate-x:0;--tw-translate-y:0;--tw-rotate:0;--tw-skew-x:0;--tw-skew-y:0;--tw-scale-x:1;--tw-scale-y:1;--tw-pan-x: ;--tw-pan-y: ;--tw-pinch-zoom: ;--tw-scroll-snap-strictness:proximity;--tw-gradient-from-position: ;--tw-gradient-via-position: ;--tw-gradient-to-position: ;--tw-ordinal: ;--tw-slashed-zero: ;--tw-numeric-figure: ;--tw-numeric-spacing: ;--tw-numeric-fraction: ;--tw-ring-inset: ;--tw-ring-offset-width:0px;--tw-ring-offset-color:#fff;--tw-ring-color:rgb(59 130 246 / 0.5);--tw-ring-offset-shadow:0 0 #0000;--tw-ring-shadow:0 0 #0000;--tw-shadow:0 0 #0000;--tw-shadow-colored:0 0 #0000;--tw-blur: ;--tw-brightness: ;--tw-contrast: ;--tw-grayscale: ;--tw-hue-rotate: ;--tw-invert: ;--tw-saturate: ;--tw-sepia: ;--tw-drop-shadow: ;--tw-backdrop-blur: ;--tw-backdrop-brightness: ;--tw-backdrop-contrast: ;--tw-backdrop-grayscale: ;--tw-backdrop-hue-rotate: ;--tw-backdrop-invert: ;--tw-backdrop-opacity: ;--tw-backdrop-saturate: ;--tw-backdrop-sepia: ;--tw-contain-size: ;--tw-contain-layout: ;--tw-contain-paint: ;--tw-contain-style: }/* ! tailwindcss v3.4.17 | MIT License | https://tailwindcss.com */*,::after,::before{box-sizing:border-box;border-width:0;border-style:solid;border-color:#e5e7eb}::after,::before{--tw-content:''}:host,html{line-height:1.5;-webkit-text-size-adjust:100%;-moz-tab-size:4;tab-size:4;font-family:ui-sans-serif, system-ui, sans-serif, "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol", "Noto Color Emoji";font-feature-settings:normal;font-variation-settings:normal;-webkit-tap-highlight-color:transparent}body{margin:0;line-height:inherit}hr{height:0;color:inherit;border-top-width:1px}abbr:where([title]){-webkit-text-decoration:underline dotted;text-decoration:underline dotted}h1,h2,h3,h4,h5,h6{font-size:inherit;font-weight:inherit}a{color:inherit;text-decoration:inherit}b,strong{font-weight:bolder}code,kbd,pre,samp{font-family:ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;font-feature-settings:normal;font-variation-settings:normal;font-size:1em}small{font-size:80%}sub,sup{font-size:75%;line-height:0;position:relative;vertical-align:baseline}sub{bottom:-.25em}sup{top:-.5em}table{text-indent:0;border-color:inherit;border-collapse:collapse}button,input,optgroup,select,textarea{font-family:inherit;font-feature-settings:inherit;font-variation-settings:inherit;font-size:100%;font-weight:inherit;line-height:inherit;letter-spacing:inherit;color:inherit;margin:0;padding:0}button,select{text-transform:none}button,input:where([type=button]),input:where([type=reset]),input:where([type=submit]){-webkit-appearance:button;background-color:transparent;background-image:none}:-moz-focusring{outline:auto}:-moz-ui-invalid{box-shadow:none}progress{vertical-align:baseline}::-webkit-inner-spin-button,::-webkit-outer-spin-button{height:auto}[type=search]{-webkit-appearance:textfield;outline-offset:-2px}::-webkit-search-decoration{-webkit-appearance:none}::-webkit-file-upload-button{-webkit-appearance:button;font:inherit}summary{display:list-item}blockquote,dd,dl,figure,h1,h2,h3,h4,h5,h6,hr,p,pre{margin:0}fieldset{margin:0;padding:0}legend{padding:0}menu,ol,ul{list-style:none;margin:0;padding:0}dialog{padding:0}textarea{resize:vertical}input::placeholder,textarea::placeholder{opacity:1;color:#9ca3af}[role=button],button{cursor:pointer}:disabled{cursor:default}audio,canvas,embed,iframe,img,object,svg,video{display:block;vertical-align:middle}img,video{max-width:100%;height:auto}[hidden]:where(:not([hidden=until-found])){display:none}.h-full{height:100%}</style></head>
+ <body style="background: var(--bg); color: var(--text);" class="">
+  <div id="connectOverlay" style="position: fixed; top: 0px; left: 0px; width: 100vw; height: 100vh; background: var(--bg); z-index: 9999; display: none; flex-direction: column; align-items: center; justify-content: center; font-family: Orbitron, sans-serif;">
     <h1 style="color: var(--accent); font-size: 2rem; margin-bottom: 20px; letter-spacing: 2px;">ELVIRA MANDO HUD</h1>
     
     <select id="channelSelect" style="margin-bottom: 30px; padding: 12px 24px; background: rgba(0, 229, 255, 0.05); color: var(--accent); border: 1px solid var(--accent); border-radius: 8px; font-family: 'Orbitron', sans-serif; font-size: 1.2rem; cursor: pointer; outline: none;">
@@ -208,31 +206,31 @@
       CONNECT TO CONTROLLER
     </button>
 
-    <p id="statusText" style="margin-top: 30px; font-family: 'JetBrains Mono', monospace; color: #ff3d71; font-size: 1rem;"></p>
+    <p id="statusText" style="margin-top: 30px; font-family: 'JetBrains Mono', monospace; color: #ff3d71; font-size: 1rem;">Disconnected cleanly.</p>
   </div>
   <div class="scanline"></div>
   
-  <div id="exitBtnContainer" style="position: fixed; top: 16px; left: 16px; z-index: 1000; display: none;">
+  <div id="exitBtnContainer" style="position: fixed; top: 16px; left: 16px; z-index: 1000; display: block;">
    <button class="export-btn" id="exitBtn" onclick="disconnectAndExit()" style="display: flex; align-items: center; gap: 8px;">
-    <i data-lucide="log-out" style="width: 16px; height: 16px;"></i>
-    <span id="exitLabel" style="display: none; font-size: 12px; font-weight: bold; font-family: 'Orbitron';">EXIT</span>
+    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" data-lucide="log-out" style="width: 16px; height: 16px;" class="lucide lucide-log-out"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"></path><polyline points="16 17 21 12 16 7"></polyline><line x1="21" x2="9" y1="12" y2="12"></line></svg>
+    <span id="exitLabel" style="display: inline; font-size: 12px; font-weight: bold; font-family: Orbitron;">EXIT</span>
    </button>
   </div>
 
   <div style="position: fixed; top: 16px; right: 16px; z-index: 1000;">
    <button class="export-btn" id="settingsBtn" onclick="toggleSettingsMenu()" style="display: flex; align-items: center; justify-content: center; padding: 8px 12px;">
-    <i data-lucide="settings" style="width: 18px; height: 18px;"></i>
+    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" data-lucide="settings" style="width: 18px; height: 18px;" class="lucide lucide-settings"><path d="M12.22 2h-.44a2 2 0 0 0-2 2v.18a2 2 0 0 1-1 1.73l-.43.25a2 2 0 0 1-2 0l-.15-.08a2 2 0 0 0-2.73.73l-.22.38a2 2 0 0 0 .73 2.73l.15.1a2 2 0 0 1 1 1.72v.51a2 2 0 0 1-1 1.74l-.15.09a2 2 0 0 0-.73 2.73l.22.38a2 2 0 0 0 2.73.73l.15-.08a2 2 0 0 1 2 0l.43.25a2 2 0 0 1 1 1.73V20a2 2 0 0 0 2 2h.44a2 2 0 0 0 2-2v-.18a2 2 0 0 1 1-1.73l.43-.25a2 2 0 0 1 2 0l.15.08a2 2 0 0 0 2.73-.73l.22-.39a2 2 0 0 0-.73-2.73l-.15-.08a2 2 0 0 1-1-1.74v-.5a2 2 0 0 1 1-1.74l.15-.09a2 2 0 0 0 .73-2.73l-.22-.38a2 2 0 0 0-2.73-.73l-.15.08a2 2 0 0 1-2 0l-.43-.25a2 2 0 0 1-1-1.73V4a2 2 0 0 0-2-2z"></path><circle cx="12" cy="12" r="3"></circle></svg>
    </button>
-   <div id="settingsMenu" style="display: none; position: absolute; top: 100%; right: 0; margin-top: 8px; background: rgba(20, 20, 32, 0.95); border: 1px solid rgba(0, 229, 255, 0.3); border-radius: 8px; overflow: hidden; min-width: 200px; z-index: 1000;">
-    <button id="fullscreenBtn" onclick="toggleFullscreen()" style="width: 100%; padding: 12px 16px; text-align: left; background: transparent; border: none; color: var(--accent); font-family: 'Orbitron'; font-size: 12px; cursor: pointer; border-bottom: 1px solid rgba(0, 229, 255, 0.1);"> <i data-lucide="maximize" style="width: 16px; height: 16px; display: inline-block; margin-right: 8px; vertical-align: middle;"></i> <span id="fullscreenLabel">Fullscreen</span> </button> 
-    <button onclick="toggleEditMode()" id="editModeBtn" style="width: 100%; padding: 12px 16px; text-align: left; background: transparent; border: none; color: var(--accent); font-family: 'Orbitron'; font-size: 12px; cursor: pointer; border-bottom: 1px solid rgba(0, 229, 255, 0.1);"> <i data-lucide="move" style="width: 16px; height: 16px; display: inline-block; margin-right: 8px; vertical-align: middle;"></i> <span id="editModeLabel">Layout Editor</span> </button> 
-    <button onclick="resetLayout()" style="width: 100%; padding: 12px 16px; text-align: left; background: transparent; border: none; color: var(--accent); font-family: 'Orbitron'; font-size: 12px; cursor: pointer; border-bottom: 1px solid rgba(0, 229, 255, 0.1);"> <i data-lucide="rotate-ccw" style="width: 16px; height: 16px; display: inline-block; margin-right: 8px; vertical-align: middle;"></i> Reset Layout </button> 
-    <button onclick="exportCode()" style="width: 100%; padding: 12px 16px; text-align: left; background: transparent; border: none; color: var(--accent); font-family: 'Orbitron'; font-size: 12px; cursor: pointer;"> <i data-lucide="download" style="width: 16px; height: 16px; display: inline-block; margin-right: 8px; vertical-align: middle;"></i> Export Layout </button>
+   <div id="settingsMenu" style="display: block; position: absolute; top: 100%; right: 0px; margin-top: 8px; background: rgba(20, 20, 32, 0.95); border: 1px solid rgba(0, 229, 255, 0.3); border-radius: 8px; overflow: hidden; min-width: 200px; z-index: 1000;">
+    <button id="fullscreenBtn" onclick="toggleFullscreen()" style="width: 100%; padding: 12px 16px; text-align: left; background: transparent; border: none; color: var(--accent); font-family: 'Orbitron'; font-size: 12px; cursor: pointer; border-bottom: 1px solid rgba(0, 229, 255, 0.1);"> <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" data-lucide="maximize" style="width: 16px; height: 16px; display: inline-block; margin-right: 8px; vertical-align: middle;" class="lucide lucide-maximize"><path d="M8 3H5a2 2 0 0 0-2 2v3"></path><path d="M21 8V5a2 2 0 0 0-2-2h-3"></path><path d="M3 16v3a2 2 0 0 0 2 2h3"></path><path d="M16 21h3a2 2 0 0 0 2-2v-3"></path></svg> <span id="fullscreenLabel">Exit Fullscreen</span> </button> 
+    <button onclick="toggleEditMode()" id="editModeBtn" style="width: 100%; padding: 12px 16px; text-align: left; background: transparent; border-top: none; border-right: none; border-left: none; border-image: initial; color: var(--accent); font-family: Orbitron; font-size: 12px; cursor: pointer; border-bottom: 1px solid rgba(0, 229, 255, 0.1);"> <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" data-lucide="move" style="width: 16px; height: 16px; display: inline-block; margin-right: 8px; vertical-align: middle;" class="lucide lucide-move"><polyline points="5 9 2 12 5 15"></polyline><polyline points="9 5 12 2 15 5"></polyline><polyline points="15 19 12 22 9 19"></polyline><polyline points="19 9 22 12 19 15"></polyline><line x1="2" x2="22" y1="12" y2="12"></line><line x1="12" x2="12" y1="2" y2="22"></line></svg> <span id="editModeLabel">Layout Editor</span> </button> 
+    <button onclick="resetLayout()" style="width: 100%; padding: 12px 16px; text-align: left; background: transparent; border: none; color: var(--accent); font-family: 'Orbitron'; font-size: 12px; cursor: pointer; border-bottom: 1px solid rgba(0, 229, 255, 0.1);"> <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" data-lucide="rotate-ccw" style="width: 16px; height: 16px; display: inline-block; margin-right: 8px; vertical-align: middle;" class="lucide lucide-rotate-ccw"><path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"></path><path d="M3 3v5h5"></path></svg> Reset Layout </button> 
+    <button onclick="exportCode()" style="width: 100%; padding: 12px 16px; text-align: left; background: transparent; border: none; color: var(--accent); font-family: 'Orbitron'; font-size: 12px; cursor: pointer;"> <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" data-lucide="download" style="width: 16px; height: 16px; display: inline-block; margin-right: 8px; vertical-align: middle;" class="lucide lucide-download"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="7 10 12 15 17 10"></polyline><line x1="12" x2="12" y1="15" y2="3"></line></svg> Export Layout </button>
    </div>
   </div>
 
-  <div id="workspace">
-   <div class="ui-group" id="group-l1l2" style="left: 5vw; top: 5vh; --local-scale: 1.05;">
+  <div id="workspace" style="cursor: default;">
+   <div class="ui-group" id="group-l1l2" style="left: 198.873px; top: 21.6683px; --local-scale: 1.05;">
     <div class="drag-handle">≡ L1 / L2</div>
     <div style="display: flex; flex-direction: column; gap: calc(4px * var(--local-scale));">
      <button class="shoulder-btn" data-btn="L1">L1</button> 
@@ -240,7 +238,7 @@
     </div>
     <div class="resize-handle"></div>
    </div>
-   <div class="ui-group" id="group-r1r2" style="left: 85vw; top: 5vh; --local-scale: 1.05;">
+   <div class="ui-group" id="group-r1r2" style="left: 741.411px; top: 14.6935px; --local-scale: 1.05;">
     <div class="drag-handle">≡ R1 / R2</div>
     <div style="display: flex; flex-direction: column; gap: calc(4px * var(--local-scale));">
      <button class="shoulder-btn" data-btn="R1">R1</button> 
@@ -248,23 +246,23 @@
     </div>
     <div class="resize-handle"></div>
    </div>
-   <div class="ui-group" id="group-hudpdf" style="left: 40vw; top: 2vh; --local-scale: 1.05;">
+   <div class="ui-group" id="group-hudpdf" style="left: 344.554px; top: -5.10938px; --local-scale: 1.21;">
     <div class="drag-handle">≡ Header</div>
     <div style="display: flex; flex-direction: column; align-items: center; gap: calc(4px * var(--local-scale));">
      <h1 id="pageTitle" style="font-family: 'Orbitron', sans-serif; font-size: calc(12px * var(--local-scale)); font-weight: 900; letter-spacing: 3px; color: var(--accent); opacity: 0.7; margin: 0;">PS2 CONTROLLER HUD</h1>
-     <div style="display: flex; align-items: center; gap: calc(8px * var(--local-scale));"><span style="font-size: calc(9px * var(--local-scale)); opacity: 0.4;">MODE: 0x73 ANALOG</span> <button class="pdf-btn" onclick="generatePDF()"><i data-lucide="file-text" style="width: calc(14px * var(--local-scale)); height: calc(14px * var(--local-scale));"></i> PDF REF</button></div>
+     <div style="display: flex; align-items: center; gap: calc(8px * var(--local-scale));"><span style="font-size: calc(9px * var(--local-scale)); opacity: 0.4;">MODE: 0x73 ANALOG</span> <button class="pdf-btn" onclick="generatePDF()"><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" data-lucide="file-text" style="width: calc(14px * var(--local-scale)); height: calc(14px * var(--local-scale));" class="lucide lucide-file-text"><path d="M14.5 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7.5L14.5 2z"></path><polyline points="14 2 14 8 20 8"></polyline><line x1="16" x2="8" y1="13" y2="13"></line><line x1="16" x2="8" y1="17" y2="17"></line><line x1="10" x2="8" y1="9" y2="9"></line></svg> PDF REF</button></div>
     </div>
     <div class="resize-handle"></div>
    </div>
-   <div class="ui-group" id="group-rawdata" style="left: 28vw; top: 15vh; --local-scale: 1.05;">
+   <div class="ui-group" id="group-rawdata" style="left: 277.903px; top: 85.4688px; --local-scale: 1.05;">
     <div class="drag-handle">≡ Raw Data Map</div>
     <div class="hud-panel">
-     <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: calc(8px * var(--local-scale));"><span style="font-size: calc(9px * var(--local-scale)); opacity: 0.4; letter-spacing: 2px;">RAW DATA — uint8_t[9]</span> <span id="dataStatus" style="font-size: calc(9px * var(--local-scale)); color: #ff3d71; font-weight: bold;">● Disconnected</span></div>
-     <div class="hex-display" id="hexDisplay" style="display: flex; gap: calc(4px * var(--local-scale));"></div>
+     <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: calc(8px * var(--local-scale));"><span style="font-size: calc(9px * var(--local-scale)); opacity: 0.4; letter-spacing: 2px;">RAW DATA — uint8_t[9]</span> <span id="dataStatus" style="font-size: calc(9px * var(--local-scale)); color: rgb(255, 61, 113); font-weight: bold;">● BLE Asleep (Idle)</span></div>
+     <div class="hex-display" id="hexDisplay" style="display: flex; gap: calc(4px * var(--local-scale));"><div style="display: flex; flex-direction: column; align-items: center;"><span class="byte-cell" id="byte0">0xFF</span><span class="byte-label">HDR</span></div><div style="display: flex; flex-direction: column; align-items: center;"><span class="byte-cell" id="byte1">0x73</span><span class="byte-label">MODE</span></div><div style="display: flex; flex-direction: column; align-items: center;"><span class="byte-cell" id="byte2">0x5A</span><span class="byte-label">ACK</span></div><div style="display: flex; flex-direction: column; align-items: center;"><span class="byte-cell" id="byte3">0xFF</span><span class="byte-label">BTN1</span></div><div style="display: flex; flex-direction: column; align-items: center;"><span class="byte-cell" id="byte4">0xFF</span><span class="byte-label">BTN2</span></div><div style="display: flex; flex-direction: column; align-items: center;"><span class="byte-cell" id="byte5">0x80</span><span class="byte-label">RX</span></div><div style="display: flex; flex-direction: column; align-items: center;"><span class="byte-cell" id="byte6">0x80</span><span class="byte-label">RY</span></div><div style="display: flex; flex-direction: column; align-items: center;"><span class="byte-cell" id="byte7">0x80</span><span class="byte-label">LX</span></div><div style="display: flex; flex-direction: column; align-items: center;"><span class="byte-cell" id="byte8">0x80</span><span class="byte-label">LY</span></div></div>
     </div>
     <div class="resize-handle"></div>
    </div>
-   <div class="ui-group" id="group-meta" style="left: 42vw; top: 38vh; --local-scale: 1.05;">
+   <div class="ui-group" id="group-meta" style="left: 388.37px; top: 243.811px; --local-scale: 1.05;">
     <div class="drag-handle">≡ Meta Keys</div>
     <div style="display: flex; gap: calc(24px * var(--local-scale));">
      <button class="meta-btn" data-btn="Select">SELECT</button> 
@@ -272,18 +270,18 @@
     </div>
     <div class="resize-handle"></div>
    </div>
-   <div class="ui-group" id="group-dpad" style="left: 10vw; top: 35vh; --local-scale: 1.05;">
+   <div class="ui-group" id="group-dpad" style="left: -6.47716px; top: 114.139px; --local-scale: 1.42;">
     <div class="drag-handle">≡ D-Pad</div>
     <div style="display: grid; grid-template-columns: 1fr 1fr 1fr; width: calc(168px * var(--local-scale)); gap: 0;">
-     <div></div><button class="dpad-btn" style="border-radius: 8px 8px 0 0;" data-btn="Up"><svg width="24" height="24" viewbox="0 0 16 16" fill="currentColor"><path d="M8 3L13 11H3z" /></svg></button><div></div>
-     <button class="dpad-btn" style="border-radius: 8px 0 0 8px;" data-btn="Left"><svg width="24" height="24" viewbox="0 0 16 16" fill="currentColor"><path d="M5 8L11 3V13z" /></svg></button>
+     <div></div><button class="dpad-btn" style="border-radius: 8px 8px 0 0;" data-btn="Up"><svg width="24" height="24" viewBox="0 0 16 16" fill="currentColor"><path d="M8 3L13 11H3z"></path></svg></button><div></div>
+     <button class="dpad-btn" style="border-radius: 8px 0 0 8px;" data-btn="Left"><svg width="24" height="24" viewBox="0 0 16 16" fill="currentColor"><path d="M5 8L11 3V13z"></path></svg></button>
      <div class="dpad-btn" style="background: transparent; border-color: transparent; cursor: default;"></div>
-     <button class="dpad-btn" style="border-radius: 0 8px 8px 0;" data-btn="Right"><svg width="24" height="24" viewbox="0 0 16 16" fill="currentColor"><path d="M11 8L5 13V3z" /></svg></button>
-     <div></div><button class="dpad-btn" style="border-radius: 0 0 8px 8px;" data-btn="Down"><svg width="24" height="24" viewbox="0 0 16 16" fill="currentColor"><path d="M8 13L3 5H13z" /></svg></button><div></div>
+     <button class="dpad-btn" style="border-radius: 0 8px 8px 0;" data-btn="Right"><svg width="24" height="24" viewBox="0 0 16 16" fill="currentColor"><path d="M11 8L5 13V3z"></path></svg></button>
+     <div></div><button class="dpad-btn" style="border-radius: 0 0 8px 8px;" data-btn="Down"><svg width="24" height="24" viewBox="0 0 16 16" fill="currentColor"><path d="M8 13L3 5H13z"></path></svg></button><div></div>
     </div>
     <div class="resize-handle"></div>
    </div>
-   <div class="ui-group" id="group-actions" style="left: 70vw; top: 35vh; --local-scale: 1.05;">
+   <div class="ui-group" id="group-actions" style="left: 749.678px; top: 109.101px; --local-scale: 1.05;">
     <div class="drag-handle">≡ Actions</div>
     <div style="display: grid; grid-template-columns: 1fr 1fr 1fr; width: calc(184px * var(--local-scale)); gap: calc(4px * var(--local-scale));">
      <div></div>
@@ -298,24 +296,24 @@
     </div>
     <div class="resize-handle"></div>
    </div>
-   <div class="ui-group" id="group-ljoy" style="left: 25vw; top: 60vh; --local-scale: 1.05;">
+   <div class="ui-group" id="group-ljoy" style="left: 230.617px; top: 263.216px; --local-scale: 1.05;">
     <div class="drag-handle">≡ L-Joy</div>
     <div class="stick-zone" id="leftStickZone">
-     <div class="stick-crosshair"></div><div class="stick-thumb" id="leftThumb"></div>
+     <div class="stick-crosshair"></div><div class="stick-thumb" id="leftThumb" style="transform: translate(-50%, -50%);"></div>
     </div>
     <div style="display: flex; align-items: center; gap: calc(8px * var(--local-scale));"><button class="stick-label-btn" data-btn="L3">L3</button> <span id="leftStickVal" style="font-family: 'JetBrains Mono', monospace; font-size: calc(11px * var(--local-scale)); opacity: 0.4;">X:80 Y:80</span></div>
     <div class="resize-handle"></div>
    </div>
-   <div class="ui-group" id="group-rjoy" style="left: 60vw; top: 60vh; --local-scale: 1.05;">
+   <div class="ui-group" id="group-rjoy" style="left: 597.886px; top: 262.025px; --local-scale: 1.05;">
     <div class="drag-handle">≡ R-Joy</div>
     <div class="stick-zone" id="rightStickZone">
-     <div class="stick-crosshair"></div><div class="stick-thumb" id="rightThumb"></div>
+     <div class="stick-crosshair"></div><div class="stick-thumb" id="rightThumb" style="transform: translate(-50%, -50%);"></div>
     </div>
     <div style="display: flex; align-items: center; gap: calc(8px * var(--local-scale));"><button class="stick-label-btn" data-btn="R3">R3</button> <span id="rightStickVal" style="font-family: 'JetBrains Mono', monospace; font-size: calc(11px * var(--local-scale)); opacity: 0.4;">X:80 Y:80</span></div>
     <div class="resize-handle"></div>
    </div>
   </div>
-  <footer><span>DUALSHOCK 2 — HID EMULATOR</span> <span id="clock"></span></footer>
+  <footer><span>DUALSHOCK 2 — HID EMULATOR</span> <span id="clock">21:26:08</span></footer>
   
   <script>
 // ===== SETTINGS & UI MENU =====
@@ -896,5 +894,5 @@ function startHeartbeat() {
     heartbeatInterval = setInterval(sendControllerData, 50); 
 }
 </script>
-</body>
-</html>
+
+</body></html>
