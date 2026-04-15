@@ -61,26 +61,28 @@ function handleMicrobitMessage(event) {
     }
 }
 
-// Function to send a command packet as a compact string
-async function sendCommandPacket(cmd, left, right) {
-    if (!rxCharacteristic) return; // Make sure we are connected
+let lastSendTime = 0; 
 
-    // Format the data tightly and MUST include the \n (newline) at the end!
-    let payloadString = `${cmd},${left},${right}\n`;
+// Convert uint8_t[9] into an 18-char hex string and send it
+function sendControllerData() {
+    if (!writeChar) return;
     
-    // Web Bluetooth requires data to be sent as a byte array, 
-    // so we encode our string into UTF-8 bytes right before sending.
-    let encoder = new TextEncoder('utf-8');
-    let payload = encoder.encode(payloadString);
+    // THE THROTTLE: Only send if 50 milliseconds have passed
+    let now = Date.now();
+    if (now - lastSendTime < 50) return;
+    lastSendTime = now;
 
-    try {
-        // Send the payload instantly
-        await rxCharacteristic.writeValueWithoutResponse(payload);
-        // console.log("Sent: " + payloadString); 
-    } catch (error) {
-        console.error("Failed to send payload:", error);
-    }
+    let hexString = Array.from(ps2Data).map(b => b.toString(16).toUpperCase().padStart(2, '0')).join('') + '\n';
+    let payload = new TextEncoder().encode(hexString);
+    writeChar.writeValueWithoutResponse(payload).catch(e => console.error(e));
 }
+
+// Hook into the HUD's visual hex updater to also fire the Bluetooth data simultaneously
+const originalUpdateHexDisplay = updateHexDisplay;
+updateHexDisplay = function() {
+    originalUpdateHexDisplay(); 
+    sendControllerData();       
+};
 
 // Example usage to trigger the happy face:
 // sendCommandPacket(1, 255, 128);
