@@ -180,6 +180,15 @@
   .settings-blinking { animation: blink-highlight 0.6s ease-in-out infinite; }
 
   footer { position: fixed; bottom: 0; left: 0; right: 0; padding: 8px 16px; display: flex; justify-content: space-between; align-items: center; font-size: 10px; opacity: 0.4; font-family: 'JetBrains Mono', monospace; pointer-events: none; background: rgba(10,10,15,0.9); z-index: 900;}
+
+  @keyframes handshake-bounce {
+    0%, 100% { transform: translateY(0); }
+    50% { transform: translateY(-5px); }
+  }
+  .handshake-anim {
+    display: inline-block;
+    animation: handshake-bounce 0.6s ease-in-out infinite;
+  }
   </style>
  </head>
  <body style="background: var(--bg); color: var(--text);">
@@ -202,8 +211,18 @@
     <p id="statusText" style="margin-top: 30px; font-family: 'JetBrains Mono', monospace; color: #ff3d71; font-size: 1rem;"></p>
   </div>
   <div class="scanline"></div>
+  
+  <div id="exitBtnContainer" style="position: fixed; top: 16px; left: 16px; z-index: 1000; display: none;">
+   <button class="export-btn" id="exitBtn" onclick="disconnectAndExit()" style="display: flex; align-items: center; gap: 8px;">
+    <i data-lucide="log-out" style="width: 16px; height: 16px;"></i>
+    <span id="exitLabel" style="display: none; font-size: 12px; font-weight: bold; font-family: 'Orbitron';">EXIT</span>
+   </button>
+  </div>
+
   <div style="position: fixed; top: 16px; right: 16px; z-index: 1000;">
-   <button class="export-btn" id="settingsBtn" onclick="toggleSettingsMenu()">⚙ SETTINGS</button>
+   <button class="export-btn" id="settingsBtn" onclick="toggleSettingsMenu()" style="display: flex; align-items: center; justify-content: center; padding: 8px 12px;">
+    <i data-lucide="settings" style="width: 18px; height: 18px;"></i>
+   </button>
    <div id="settingsMenu" style="display: none; position: absolute; top: 100%; right: 0; margin-top: 8px; background: rgba(20, 20, 32, 0.95); border: 1px solid rgba(0, 229, 255, 0.3); border-radius: 8px; overflow: hidden; min-width: 200px; z-index: 1000;">
     <button id="fullscreenBtn" onclick="toggleFullscreen()" style="width: 100%; padding: 12px 16px; text-align: left; background: transparent; border: none; color: var(--accent); font-family: 'Orbitron'; font-size: 12px; cursor: pointer; border-bottom: 1px solid rgba(0, 229, 255, 0.1);"> <i data-lucide="maximize" style="width: 16px; height: 16px; display: inline-block; margin-right: 8px; vertical-align: middle;"></i> <span id="fullscreenLabel">Fullscreen</span> </button> 
     <button onclick="toggleEditMode()" id="editModeBtn" style="width: 100%; padding: 12px 16px; text-align: left; background: transparent; border: none; color: var(--accent); font-family: 'Orbitron'; font-size: 12px; cursor: pointer; border-bottom: 1px solid rgba(0, 229, 255, 0.1);"> <i data-lucide="move" style="width: 16px; height: 16px; display: inline-block; margin-right: 8px; vertical-align: middle;"></i> <span id="editModeLabel">Layout Editor</span> </button> 
@@ -211,6 +230,7 @@
     <button onclick="exportCode()" style="width: 100%; padding: 12px 16px; text-align: left; background: transparent; border: none; color: var(--accent); font-family: 'Orbitron'; font-size: 12px; cursor: pointer;"> <i data-lucide="download" style="width: 16px; height: 16px; display: inline-block; margin-right: 8px; vertical-align: middle;"></i> Export Layout </button>
    </div>
   </div>
+
   <div id="workspace">
    <div class="ui-group" id="group-l1l2" style="left: 5vw; top: 5vh; --local-scale: 1.05;">
     <div class="drag-handle">≡ L1 / L2</div>
@@ -315,12 +335,15 @@ document.addEventListener('click', (e) => {
 });
 
 function toggleFullscreen() {
+  const exitLabel = document.getElementById('exitLabel');
   if (!document.fullscreenElement) {
     document.documentElement.requestFullscreen().catch(err => console.error(err));
     document.getElementById('fullscreenLabel').textContent = 'Exit Fullscreen';
+    if (exitLabel) exitLabel.style.display = 'inline'; // Show EXIT text
   } else {
     document.exitFullscreen();
     document.getElementById('fullscreenLabel').textContent = 'Fullscreen';
+    if (exitLabel) exitLabel.style.display = 'none'; // Hide EXIT text
   }
   document.getElementById('settingsMenu').style.display = 'none';
 }
@@ -680,44 +703,85 @@ initStick('leftStickZone', 'leftThumb', 'leftStickVal', 7, 8);
 initStick('rightStickZone', 'rightThumb', 'rightStickVal', 5, 6);
 updateClock(); setInterval(updateClock, 1000);
 lucide.createIcons();
+
 // ===== BLUETOOTH COMMS & DATA COMPRESSION =====
+const MICROBIT_SERVICE_UUID = "6e400001-b5a3-f393-e0a9-e50e24dcca9e";
 const MICROBIT_TX_UUID = "6e400002-b5a3-f393-e0a9-e50e24dcca9e"; // Handshake listener
 const MICROBIT_RX_UUID = "6e400003-b5a3-f393-e0a9-e50e24dcca9e"; // Controller data sender
 
-let btServer, listenChar, writeChar;
+let btServer, listenChar, writeChar, bluetoothDevice;
+let handshakeWatchdog = null; 
 const connectOverlay = document.getElementById('connectOverlay');
 const channelSelect = document.getElementById('channelSelect');
 const statusText = document.getElementById('statusText');
 
+// Centralized disconnect handler
+function handleDeviceDisconnect() {
+    if (connectOverlay.style.display === 'none') {
+        disconnectAndExit(); 
+        statusText.innerText = "Micro:bit rebooted or went out of range. Connection lost.";
+    }
+}
+
+// Helper to fully rebuild the BT pipeline (so the watchdog can reuse it safely)
+async function setupBluetoothPipeline() {
+    btServer = await bluetoothDevice.gatt.connect();
+    const service = await btServer.getPrimaryService(MICROBIT_SERVICE_UUID);
+    
+    listenChar = await service.getCharacteristic(MICROBIT_TX_UUID);
+    writeChar = await service.getCharacteristic(MICROBIT_RX_UUID);
+    
+    await listenChar.startNotifications();
+    listenChar.addEventListener('characteristicvaluechanged', handleHandshake);
+}
+
 async function connectBluetooth() {
-    // --- FEATURE: DEBUG BYPASS ---
     if (channelSelect.value === "DEBUG") {
         connectOverlay.style.display = 'none';
+        document.getElementById('exitBtnContainer').style.display = 'block';
         checkConnection();
-        startHeartbeat(); // Start the loop without Bluetooth
+        startHeartbeat(); 
         return;
     }
 
     try {
         statusText.innerText = "Scanning for Micro:Bit...";
-        let device = await navigator.bluetooth.requestDevice({
+        bluetoothDevice = await navigator.bluetooth.requestDevice({
             filters: [{ namePrefix: 'BBC micro:bit' }],
-            optionalServices: ["6e400001-b5a3-f393-e0a9-e50e24dcca9e"]
+            optionalServices: [MICROBIT_SERVICE_UUID]
         });
 
-        btServer = await device.gatt.connect();
-        const service = await btServer.getPrimaryService("6e400001-b5a3-f393-e0a9-e50e24dcca9e");
-        
-        listenChar = await service.getCharacteristic(MICROBIT_TX_UUID);
-        writeChar = await service.getCharacteristic(MICROBIT_RX_UUID);
-        
-        await listenChar.startNotifications();
-        listenChar.addEventListener('characteristicvaluechanged', handleHandshake);
+        // Prevent memory leak: clear old listeners before adding a new one
+        bluetoothDevice.removeEventListener('gattserverdisconnected', handleDeviceDisconnect);
+        bluetoothDevice.addEventListener('gattserverdisconnected', handleDeviceDisconnect);
 
-        statusText.innerText = "Connected! Waiting for handshake...";
+        await setupBluetoothPipeline();
+
+        statusText.innerHTML = 'Connected! Waiting for handshake <span class="handshake-anim">🤝</span>';
+        
+        // Watchdog: If Android misses the handshake, rebuild the entire pipeline!
+        if (handshakeWatchdog) clearInterval(handshakeWatchdog);
+        handshakeWatchdog = setInterval(async () => {
+            if (connectOverlay.style.display !== 'none' && btServer) {
+                console.log("Handshake missed (Android UI Lag). Rebuilding pipeline...");
+                statusText.innerHTML = 'Retrying connection... <span class="handshake-anim">🤝</span>';
+                
+                if (btServer.connected) btServer.disconnect(); // Drop the deaf connection
+                
+                // Wait 1 second for BT stack to clear, then properly re-subscribe
+                setTimeout(async () => {
+                    try { 
+                        await setupBluetoothPipeline(); 
+                        statusText.innerHTML = 'Connected! Waiting for handshake <span class="handshake-anim">🤝</span>';
+                    } catch(e) { console.error("Watchdog retry failed", e); }
+                }, 1000);
+            }
+        }, 5000); // 5 seconds gives slow Android phones plenty of time
+
     } catch (error) {
         console.error(error);
         statusText.innerText = "Connection Failed or Cancelled.";
+        if (handshakeWatchdog) clearInterval(handshakeWatchdog);
     }
 }
 
@@ -726,13 +790,48 @@ function handleHandshake(event) {
     if (message.includes("HANDSHAKE")) {
         let hwChannel = message.split(":")[1];
         if (hwChannel === channelSelect.value) {
+            
+            if (handshakeWatchdog) clearInterval(handshakeWatchdog); // Success! Kill watchdog.
+            
             connectOverlay.style.display = 'none'; 
+            document.getElementById('exitBtnContainer').style.display = 'block'; 
             checkConnection(); 
-            startHeartbeat(); // Start the 50ms loop!
+            startHeartbeat(); 
+            
         } else {
             statusText.innerText = `Error: App expected Ch ${channelSelect.value}, got Ch ${hwChannel}`;
         }
     }
+}
+
+function disconnectAndExit() {
+    // 1. Kill Timers
+    if (heartbeatInterval) clearInterval(heartbeatInterval);
+    if (handshakeWatchdog) clearInterval(handshakeWatchdog);
+    
+    // 2. IMPORTANT: Hide UI *before* disconnecting to prevent false "Crash" errors
+    connectOverlay.style.display = 'flex';
+    document.getElementById('exitBtnContainer').style.display = 'none';
+    
+    // 3. Kill Bluetooth safely
+    if (btServer && btServer.connected) btServer.disconnect();
+    
+    // 4. Drop Fullscreen
+    if (document.fullscreenElement) {
+        document.exitFullscreen();
+        document.getElementById('fullscreenLabel').textContent = 'Fullscreen';
+        const exitLabel = document.getElementById('exitLabel');
+        if (exitLabel) exitLabel.style.display = 'none';
+    }
+
+    // 5. Reset internal states
+    statusText.innerText = "Disconnected cleanly.";
+    isConnected = false;
+    isBleSleeping = false;
+    idleSendCount = 0;
+    
+    document.getElementById('dataStatus').textContent = '● Disconnected';
+    document.getElementById('dataStatus').style.color = '#ff3d71';
 }
 
 // ==========================================
@@ -743,14 +842,12 @@ let sequenceCounter = 0;
 let idleSendCount = 0;
 let isBleSleeping = false;
 
-// Check if all buttons and joysticks are in their default unpressed/centered states
 function isControllerIdle() {
     return ps2Data[3] === 255 && ps2Data[4] === 255 && 
            ps2Data[5] === 128 && ps2Data[6] === 128 && 
            ps2Data[7] === 128 && ps2Data[8] === 128;
 }
 
-// Changes the HUD text to show when BLE is sleeping vs transmitting
 function updateConnectionUI(isTransmitting) {
     const dataStatus = document.getElementById('dataStatus');
     if (isTransmitting && isBleSleeping) {
@@ -759,7 +856,7 @@ function updateConnectionUI(isTransmitting) {
         isBleSleeping = false;
     } else if (!isTransmitting && !isBleSleeping) {
         dataStatus.textContent = '● BLE Asleep (Idle)';
-        dataStatus.style.color = '#ff3d71'; // Red
+        dataStatus.style.color = '#ff3d71';
         isBleSleeping = true;
     }
 }
@@ -767,30 +864,26 @@ function updateConnectionUI(isTransmitting) {
 function sendControllerData() {
     let currentlyIdle = isControllerIdle();
 
-    // --- FEATURE: SMART IDLE DETECTION ---
     if (currentlyIdle) {
         if (idleSendCount >= 2) {
-            updateConnectionUI(false); // Change UI to Asleep
-            return; // ABORT! Do not send packet, save BLE bandwidth!
+            updateConnectionUI(false); 
+            return; 
         }
         idleSendCount++;
     } else {
         idleSendCount = 0; 
     }
 
-    updateConnectionUI(true); // Change UI to Transmitting
+    updateConnectionUI(true); 
 
-    // --- FEATURE: REAL-TIME HDR UPDATE ---
     ps2Data[0] = sequenceCounter;
     sequenceCounter = (sequenceCounter + 1) % 256; 
     
-    // Target ONLY the Byte0 cell to prevent browser lag
     let hdrDisplay = document.getElementById('byte0');
     if (hdrDisplay) {
         hdrDisplay.textContent = '0x' + ps2Data[0].toString(16).toUpperCase().padStart(2, '0');
     }
 
-    // Convert and Send
     if (writeChar) {
         let hexString = Array.from(ps2Data).map(b => b.toString(16).toUpperCase().padStart(2, '0')).join('') + '\n';
         let payload = new TextEncoder().encode(hexString);
