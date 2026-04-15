@@ -192,6 +192,7 @@
       <option value="5">Channel 5</option> <option value="6">Channel 6</option>
       <option value="7">Channel 7</option> <option value="8">Channel 8</option>
       <option value="9">Channel 9</option> <option value="10">Channel 10</option>
+      <option value="DEBUG">DEBUG (Test UI / No BLE)</option>
     </select>
 
     <button onclick="connectBluetooth()" style="padding: 16px 32px; font-family: 'Orbitron', sans-serif; font-size: 1.2rem; font-weight: 900; background: rgba(0, 229, 255, 0.1); border: 2px solid var(--accent); color: var(--accent); border-radius: 8px; cursor: pointer; transition: all 0.2s; box-shadow: 0 0 15px rgba(0, 229, 255, 0.2);">
@@ -689,6 +690,14 @@ const channelSelect = document.getElementById('channelSelect');
 const statusText = document.getElementById('statusText');
 
 async function connectBluetooth() {
+    // --- FEATURE: DEBUG BYPASS ---
+    if (channelSelect.value === "DEBUG") {
+        connectOverlay.style.display = 'none';
+        checkConnection();
+        startHeartbeat(); // Start the loop without Bluetooth
+        return;
+    }
+
     try {
         statusText.innerText = "Scanning for Micro:Bit...";
         let device = await navigator.bluetooth.requestDevice({
@@ -700,10 +709,11 @@ async function connectBluetooth() {
         const service = await btServer.getPrimaryService("6e400001-b5a3-f393-e0a9-e50e24dcca9e");
         
         listenChar = await service.getCharacteristic(MICROBIT_TX_UUID);
+        writeChar = await service.getCharacteristic(MICROBIT_RX_UUID);
+        
         await listenChar.startNotifications();
         listenChar.addEventListener('characteristicvaluechanged', handleHandshake);
 
-        writeChar = await service.getCharacteristic(MICROBIT_RX_UUID);
         statusText.innerText = "Connected! Waiting for handshake...";
     } catch (error) {
         console.error(error);
@@ -716,28 +726,82 @@ function handleHandshake(event) {
     if (message.includes("HANDSHAKE")) {
         let hwChannel = message.split(":")[1];
         if (hwChannel === channelSelect.value) {
-            connectOverlay.style.display = 'none'; // Success! Reveal the HUD!
+            connectOverlay.style.display = 'none'; 
             checkConnection(); 
+            startHeartbeat(); // Start the 50ms loop!
         } else {
             statusText.innerText = `Error: App expected Ch ${channelSelect.value}, got Ch ${hwChannel}`;
         }
     }
 }
 
-// Convert uint8_t[9] into an 18-char hex string (e.g. "FF735AFFFF80808080\n")
-function sendControllerData() {
-    if (!writeChar) return;
-    let hexString = Array.from(ps2Data).map(b => b.toString(16).toUpperCase().padStart(2, '0')).join('') + '\n';
-    let payload = new TextEncoder().encode(hexString);
-    writeChar.writeValueWithoutResponse(payload).catch(e => console.error(e));
+// ==========================================
+// SMART IDLE & REAL-TIME HDR LOGIC
+// ==========================================
+let heartbeatInterval = null;
+let sequenceCounter = 0; 
+let idleSendCount = 0;
+let isBleSleeping = false;
+
+// Check if all buttons and joysticks are in their default unpressed/centered states
+function isControllerIdle() {
+    return ps2Data[3] === 255 && ps2Data[4] === 255 && 
+           ps2Data[5] === 128 && ps2Data[6] === 128 && 
+           ps2Data[7] === 128 && ps2Data[8] === 128;
 }
 
-// Hook into the HUD's visual hex updater to also fire the Bluetooth data simultaneously
-const originalUpdateHexDisplay = updateHexDisplay;
-updateHexDisplay = function() {
-    originalUpdateHexDisplay(); 
-    sendControllerData();       
-};
+// Changes the HUD text to show when BLE is sleeping vs transmitting
+function updateConnectionUI(isTransmitting) {
+    const dataStatus = document.getElementById('dataStatus');
+    if (isTransmitting && isBleSleeping) {
+        dataStatus.textContent = '● Transmitting';
+        dataStatus.style.color = 'var(--accent)';
+        isBleSleeping = false;
+    } else if (!isTransmitting && !isBleSleeping) {
+        dataStatus.textContent = '● BLE Asleep (Idle)';
+        dataStatus.style.color = '#ff3d71'; // Red
+        isBleSleeping = true;
+    }
+}
+
+function sendControllerData() {
+    let currentlyIdle = isControllerIdle();
+
+    // --- FEATURE: SMART IDLE DETECTION ---
+    if (currentlyIdle) {
+        if (idleSendCount >= 2) {
+            updateConnectionUI(false); // Change UI to Asleep
+            return; // ABORT! Do not send packet, save BLE bandwidth!
+        }
+        idleSendCount++;
+    } else {
+        idleSendCount = 0; 
+    }
+
+    updateConnectionUI(true); // Change UI to Transmitting
+
+    // --- FEATURE: REAL-TIME HDR UPDATE ---
+    ps2Data[0] = sequenceCounter;
+    sequenceCounter = (sequenceCounter + 1) % 256; 
+    
+    // Target ONLY the Byte0 cell to prevent browser lag
+    let hdrDisplay = document.getElementById('byte0');
+    if (hdrDisplay) {
+        hdrDisplay.textContent = '0x' + ps2Data[0].toString(16).toUpperCase().padStart(2, '0');
+    }
+
+    // Convert and Send
+    if (writeChar) {
+        let hexString = Array.from(ps2Data).map(b => b.toString(16).toUpperCase().padStart(2, '0')).join('') + '\n';
+        let payload = new TextEncoder().encode(hexString);
+        writeChar.writeValueWithoutResponse(payload).catch(e => console.log("Packet dropped"));
+    }
+}
+
+function startHeartbeat() {
+    if (heartbeatInterval) clearInterval(heartbeatInterval);
+    heartbeatInterval = setInterval(sendControllerData, 50); 
+}
 </script>
 </body>
 </html>
