@@ -61,43 +61,47 @@ function handleMicrobitMessage(event) {
     }
 }
 
-let lastSendTime = 0; 
-let throttleTimer = null; // Remembers if a packet is waiting in line
+let heartbeatInterval = null;
+let sequenceCounter = 0; // Add our new rolling counter!
 
-// Convert uint8_t[9] into an 18-char hex string and send it
+// The function that physically sends the data
 function sendControllerData() {
     if (!writeChar) return;
     
-    let now = Date.now();
-    let timeRemaining = 50 - (now - lastSendTime);
-
-    // Helper function that actually builds and sends the Bluetooth payload
-    const executeSend = () => {
-        lastSendTime = Date.now();
-        let hexString = Array.from(ps2Data).map(b => b.toString(16).toUpperCase().padStart(2, '0')).join('') + '\n';
-        let payload = new TextEncoder().encode(hexString);
-        writeChar.writeValueWithoutResponse(payload).catch(e => console.error(e));
-    };
-
-    if (timeRemaining <= 0) {
-        // 1. If 50ms has already passed, send instantly!
-        if (throttleTimer) clearTimeout(throttleTimer);
-        executeSend();
-    } else {
-        // 2. If it's too soon, queue the latest state to send exactly when the cooldown finishes!
-        if (throttleTimer) clearTimeout(throttleTimer);
-        throttleTimer = setTimeout(() => {
-            executeSend();
-        }, timeRemaining);
-    }
+    // 1. Inject the rolling counter into Byte 0, then increment it (0 to 255)
+    ps2Data[0] = sequenceCounter;
+    sequenceCounter = (sequenceCounter + 1) % 256; 
+    
+    // 2. Convert the array to hex and send it
+    let hexString = Array.from(ps2Data).map(b => b.toString(16).toUpperCase().padStart(2, '0')).join('') + '\n';
+    let payload = new TextEncoder().encode(hexString);
+    writeChar.writeValueWithoutResponse(payload).catch(e => console.log("Packet dropped, retrying..."));
 }
 
-// Hook into the HUD's visual hex updater to also fire the Bluetooth data simultaneously
+// Hook into the HUD's visual hex updater 
+// (We only update the visual hex here now, the heartbeat handles the Bluetooth)
 const originalUpdateHexDisplay = updateHexDisplay;
 updateHexDisplay = function() {
     originalUpdateHexDisplay(); 
-    sendControllerData();       
 };
+
+function handleHandshake(event) {
+    let message = new TextDecoder('utf-8').decode(event.target.value).trim();
+    if (message.includes("HANDSHAKE")) {
+        let hwChannel = message.split(":")[1];
+        if (hwChannel === channelSelect.value) {
+            connectOverlay.style.display = 'none'; // Success! Reveal the HUD!
+            checkConnection(); 
+            
+            // --- START THE HIGH-SPEED HEARTBEAT (10ms) ---
+            if (heartbeatInterval) clearInterval(heartbeatInterval);
+            heartbeatInterval = setInterval(sendControllerData, 10); 
+            
+        } else {
+            statusText.innerText = `Error: App expected Ch ${channelSelect.value}, got Ch ${hwChannel}`;
+        }
+    }
+}
 
 // Example usage to trigger the happy face:
 // sendCommandPacket(1, 255, 128);
