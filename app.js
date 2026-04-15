@@ -62,19 +62,34 @@ function handleMicrobitMessage(event) {
 }
 
 let lastSendTime = 0; 
+let throttleTimer = null; // Remembers if a packet is waiting in line
 
 // Convert uint8_t[9] into an 18-char hex string and send it
 function sendControllerData() {
     if (!writeChar) return;
     
-    // THE THROTTLE: Only send if 50 milliseconds have passed
     let now = Date.now();
-    if (now - lastSendTime < 50) return;
-    lastSendTime = now;
+    let timeRemaining = 50 - (now - lastSendTime);
 
-    let hexString = Array.from(ps2Data).map(b => b.toString(16).toUpperCase().padStart(2, '0')).join('') + '\n';
-    let payload = new TextEncoder().encode(hexString);
-    writeChar.writeValueWithoutResponse(payload).catch(e => console.error(e));
+    // Helper function that actually builds and sends the Bluetooth payload
+    const executeSend = () => {
+        lastSendTime = Date.now();
+        let hexString = Array.from(ps2Data).map(b => b.toString(16).toUpperCase().padStart(2, '0')).join('') + '\n';
+        let payload = new TextEncoder().encode(hexString);
+        writeChar.writeValueWithoutResponse(payload).catch(e => console.error(e));
+    };
+
+    if (timeRemaining <= 0) {
+        // 1. If 50ms has already passed, send instantly!
+        if (throttleTimer) clearTimeout(throttleTimer);
+        executeSend();
+    } else {
+        // 2. If it's too soon, queue the latest state to send exactly when the cooldown finishes!
+        if (throttleTimer) clearTimeout(throttleTimer);
+        throttleTimer = setTimeout(() => {
+            executeSend();
+        }, timeRemaining);
+    }
 }
 
 // Hook into the HUD's visual hex updater to also fire the Bluetooth data simultaneously
