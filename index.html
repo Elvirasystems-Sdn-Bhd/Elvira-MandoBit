@@ -232,7 +232,7 @@
    <div class="ui-group" id="group-l1l2" style="left: 198.873px; top: 21.6683px; --local-scale: 1.05;">
     <div class="drag-handle">≡ L1 / L2</div>
     <div style="display: flex; flex-direction: column; gap: calc(4px * var(--local-scale));">
-     <button class="shoulder-btn" data-btn="L1">L1</button> 
+     <button class="shoulder-btn" data-btn="L1">L1</button>
      <button class="shoulder-btn" data-btn="L2">L2</button>
     </div>
     <div class="resize-handle"></div>
@@ -249,10 +249,18 @@
     <div class="drag-handle">≡ Header</div>
     <div style="display: flex; flex-direction: column; align-items: center; gap: calc(4px * var(--local-scale));">
      <h1 id="pageTitle" style="font-family: 'Orbitron', sans-serif; font-size: calc(12px * var(--local-scale)); font-weight: 900; letter-spacing: 3px; color: var(--accent); opacity: 0.7; margin: 0;">PS2 CONTROLLER HUD</h1>
-     <div style="display: flex; align-items: center; gap: calc(8px * var(--local-scale));"><span style="font-size: calc(9px * var(--local-scale)); opacity: 0.4;">MODE: 0x73 ANALOG</span> <button class="pdf-btn" onclick="generatePDF()"><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" data-lucide="file-text" style="width: calc(14px * var(--local-scale)); height: calc(14px * var(--local-scale));" class="lucide lucide-file-text"><path d="M14.5 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7.5L14.5 2z"></path><polyline points="14 2 14 8 20 8"></polyline><line x1="16" x2="8" y1="13" y2="13"></line><line x1="16" x2="8" y1="17" y2="17"></line><line x1="10" x2="8" y1="9" y2="9"></line></svg> PDF REF</button></div>
+     
+     <div style="display: flex; flex-direction: column; align-items: center;">
+       <div style="display: flex; align-items: center; gap: calc(8px * var(--local-scale));">
+         <span id="modeText" style="font-size: calc(9px * var(--local-scale)); opacity: 0.4;">MODE: 0x73 ANALOG</span> 
+         <button class="pdf-btn" onclick="generatePDF()"><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" data-lucide="file-text" style="width: calc(14px * var(--local-scale)); height: calc(14px * var(--local-scale));" class="lucide lucide-file-text"><path d="M14.5 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7.5L14.5 2z"></path><polyline points="14 2 14 8 20 8"></polyline><line x1="16" x2="8" y1="13" y2="13"></line><line x1="16" x2="8" y1="17" y2="17"></line><line x1="10" x2="8" y1="9" y2="9"></line></svg> PDF REF</button>
+       </div>
+       <span id="hwIdText" style="font-family: 'Orbitron', sans-serif; font-size: calc(8px * var(--local-scale)); color: var(--accent2); display: none; margin-top: 4px;"></span>
+     </div>
+
     </div>
     <div class="resize-handle"></div>
-   </div>
+</div>
    <div class="ui-group" id="group-rawdata" style="left: 277.903px; top: 85.4688px; --local-scale: 1.05;">
     <div class="drag-handle">≡ Raw Data Map</div>
     <div class="hud-panel">
