@@ -77,7 +77,7 @@ function sendControllerData() {
     if (typeof updateHexDisplay === 'function') {
         updateHexDisplay(); 
     }
-    
+
     // 1. Check for physical controller overrides first!
     pollPhysicalController();
 
@@ -119,22 +119,16 @@ function handleHandshake(event) {
 
 // --- Physical Controller Integration ---
 let physicalGamepadIndex = null;
-const DEADZONE = 0.1; // Threshold to determine if sticks are being touched
+const DEADZONE = 0.1; 
+let prevGamepadBtns = new Array(20).fill(false); // Tracks button releases to prevent them getting stuck!
 
 // 1. Connection Event Listeners
 window.addEventListener("gamepadconnected", (e) => {
     physicalGamepadIndex = e.gamepad.index;
     const gp = navigator.getGamepads()[physicalGamepadIndex];
-    
-    // Update UI to HYBRID mode
     document.getElementById('modeText').textContent = "Mode: 0x73 HYBRID";
-    
-    // Extract VID/PID from the gamepad ID string (Browser dependent format)
-    // Fallback to displaying the first 30 chars of the ID string if exact VID/PID isn't parsed
     document.getElementById('hwIdText').textContent = "HW: " + gp.id.substring(0, 30);
     document.getElementById('hwIdText').style.display = "inline";
-    
-    console.log(`Physical Controller Connected: ${gp.id}`);
 });
 
 window.addEventListener("gamepaddisconnected", (e) => {
@@ -152,75 +146,102 @@ window.addEventListener("gamepaddisconnected", (e) => {
 // 2. Headless Polling Logic (Call this inside your main data loop or requestAnimationFrame)
 function pollPhysicalController() {
     if (physicalGamepadIndex === null) return;
-    
     const gp = navigator.getGamepads()[physicalGamepadIndex];
     if (!gp) return;
 
-    // --- JOYSTICK PRIORITY & VISUAL MIRRORING ---
-    // Left Stick (Standard Axes 0 = X, 1 = Y)
+    // --- JOYSTICK OVERRIDES ---
+    // Left Stick
     if (Math.abs(gp.axes[0]) > DEADZONE || Math.abs(gp.axes[1]) > DEADZONE) {
-        // Convert from -1.0 to 1.0 float scale to your 0-255 uint8_t scale
-        let lx = Math.round(((gp.axes[0] + 1) / 2) * 255);
-        let ly = Math.round(((gp.axes[1] + 1) / 2) * 255); // NOTE: Y axis may need inversion depending on your specific array map
-        
-        // Overwrite the uint8_t array (Assuming standard PS2 indices for LX and LY)
-        ps2Data[7] = lx; 
-        ps2Data[8] = ly; 
-        
-        // Visual Mirroring (Update your virtual CSS transform here)
-        mirrorVirtualStick('leftStick', gp.axes[0], gp.axes[1]);
+        ps2Data[7] = Math.round(((gp.axes[0] + 1) / 2) * 255);
+        ps2Data[8] = Math.round(((gp.axes[1] + 1) / 2) * 255);
+        mirrorVirtualStick('leftThumb', gp.axes[0], gp.axes[1]);
+        prevGamepadBtns['L_STICK_ACTIVE'] = true;
+    } else if (prevGamepadBtns['L_STICK_ACTIVE']) {
+        // Snap to center when released
+        mirrorVirtualStick('leftThumb', 0, 0); 
+        ps2Data[7] = 128;
+        ps2Data[8] = 128;
+        prevGamepadBtns['L_STICK_ACTIVE'] = false;
     }
 
-    // Right Stick (Standard Axes 2 = X, 3 = Y)
+    // Right Stick
     if (Math.abs(gp.axes[2]) > DEADZONE || Math.abs(gp.axes[3]) > DEADZONE) {
-        let rx = Math.round(((gp.axes[2] + 1) / 2) * 255);
-        let ry = Math.round(((gp.axes[3] + 1) / 2) * 255);
-        
-        ps2Data[5] = rx;
-        ps2Data[6] = ry;
-        
-        mirrorVirtualStick('rightStick', gp.axes[2], gp.axes[3]);
+        ps2Data[5] = Math.round(((gp.axes[2] + 1) / 2) * 255);
+        ps2Data[6] = Math.round(((gp.axes[3] + 1) / 2) * 255);
+        mirrorVirtualStick('rightThumb', gp.axes[2], gp.axes[3]);
+        prevGamepadBtns['R_STICK_ACTIVE'] = true;
+    } else if (prevGamepadBtns['R_STICK_ACTIVE']) {
+        // Snap to center when released
+        mirrorVirtualStick('rightThumb', 0, 0);
+        ps2Data[5] = 128;
+        ps2Data[6] = 128;
+        prevGamepadBtns['R_STICK_ACTIVE'] = false;
     }
 
-    // --- INPUT REDUNDANCY (Buttons) ---
-    // Standard Gamepad API Mapping: 0=A/Cross, 1=B/Circle, 2=X/Square, 3=Y/Triangle
-    // L3 = 10, R3 = 11. 
-    // We clear the bit (set to 0) if pressed, to merge with virtual buttons.
-    
-    if (gp.buttons[10].pressed) { 
-        ps2Data[3] &= ~0x02; // Assuming L3 is Byte 3, Bit 1
-        highlightVirtualButton('L3');
-    }
-    if (gp.buttons[11].pressed) { 
-        ps2Data[3] &= ~0x04; // Assuming R3 is Byte 3, Bit 2
-        highlightVirtualButton('R3');
-    }
-    
-    if (gp.buttons[0].pressed) ps2Data[4] &= ~0x40; // Cross
-    if (gp.buttons[1].pressed) ps2Data[4] &= ~0x20; // Circle
-    if (gp.buttons[2].pressed) ps2Data[4] &= ~0x80; // Square
-    if (gp.buttons[3].pressed) ps2Data[4] &= ~0x10; // Triangle
-    // Add L1, R1, L2, R2 as needed based on your specific bitmask configuration
+    // --- BUTTON MAPPINGS (Matches HUD data-btn EXACTLY) ---
+    const mappings = [
+        { gpIdx: 12, byte: 3, mask: 0x10, name: 'Up' },
+        { gpIdx: 13, byte: 3, mask: 0x40, name: 'Down' },
+        { gpIdx: 14, byte: 3, mask: 0x80, name: 'Left' },
+        { gpIdx: 15, byte: 3, mask: 0x20, name: 'Right' },
+        
+        { gpIdx: 0, byte: 4, mask: 0x40, name: 'Cross' },
+        { gpIdx: 1, byte: 4, mask: 0x20, name: 'Circle' },
+        { gpIdx: 2, byte: 4, mask: 0x80, name: 'Square' },
+        { gpIdx: 3, byte: 4, mask: 0x10, name: 'Triangle' },
+        
+        { gpIdx: 4, byte: 4, mask: 0x04, name: 'L1' },
+        { gpIdx: 5, byte: 4, mask: 0x08, name: 'R1' },
+        { gpIdx: 6, byte: 4, mask: 0x01, name: 'L2' },
+        { gpIdx: 7, byte: 4, mask: 0x02, name: 'R2' },
+        
+        { gpIdx: 8, byte: 3, mask: 0x01, name: 'Select' },
+        { gpIdx: 9, byte: 3, mask: 0x08, name: 'Start' }
+    ];
+
+    mappings.forEach(m => {
+        // Double check array exists before reading
+        const isPressed = gp.buttons[m.gpIdx] && gp.buttons[m.gpIdx].pressed;
+        const wasPressed = prevGamepadBtns[m.gpIdx];
+
+        if (isPressed && !wasPressed) {
+            // Button JUST pressed down -> Clear the bit (Active LOW)
+            ps2Data[m.byte] &= ~m.mask;
+            highlightVirtualButton(m.name, true);
+            prevGamepadBtns[m.gpIdx] = true;
+        } else if (!isPressed && wasPressed) {
+            // Button JUST released -> Return bit to 1
+            ps2Data[m.byte] |= m.mask;
+            highlightVirtualButton(m.name, false);
+            prevGamepadBtns[m.gpIdx] = false;
+        }
+    });
 }
 
 // 3. Helper functions for Visual Mirroring
-function mirrorVirtualStick(stickId, axisX, axisY) {
-    const stickEl = document.getElementById(stickId);
-    if (!stickEl) return;
+function mirrorVirtualStick(thumbId, axisX, axisY) {
+    const thumbEl = document.getElementById(thumbId);
+    if (!thumbEl) return;
     
-    // Max pixel radius for the UI stick
+    // Scale movement to the visual HUD limits
     const maxRadius = 40; 
     const moveX = axisX * maxRadius;
     const moveY = axisY * maxRadius;
     
-    stickEl.style.transform = `translate(${moveX}px, ${moveY}px)`;
+    // Using calc(-50% + X) prevents the thumb stick from glitching off-center!
+    thumbEl.style.transform = `translate(calc(-50% + ${moveX}px), calc(-50% + ${moveY}px))`;
+    
+    // Flash the border to show it is active
+    if(axisX !== 0 || axisY !== 0) thumbEl.classList.add('active');
+    else thumbEl.classList.remove('active');
 }
 
-function highlightVirtualButton(buttonId) {
-    const btnEl = document.getElementById(buttonId);
+function highlightVirtualButton(buttonName, isPressed) {
+    // Queries exact data-btn matching your builder's HTML
+    const btnEl = document.querySelector(`[data-btn="${buttonName}"]`);
     if (btnEl) {
-        btnEl.classList.add('active-press'); // Assumes you have a CSS class for pressed state
-        setTimeout(() => btnEl.classList.remove('active-press'), 50);
+        if (isPressed) btnEl.classList.add('pressed'); 
+        else btnEl.classList.remove('pressed');
     }
 }
 
