@@ -1,232 +1,56 @@
-<html lang="en" class="h-full"><head>
+<!DOCTYPE html>
+<html lang="en" class="h-full">
+<head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no, maximum-scale=1.0">
-  <title>PS2 DualShock HUD Controller Builder</title>
+  <title>PS2 DualShock HUD Controller</title>
+  
+  <link rel="manifest" href="manifest.json">
+  <meta name="theme-color" content="#0a0a0f">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <link rel="apple-touch-icon" href="icon-192.png">
+
   <script src="https://cdn.tailwindcss.com/3.4.17"></script>
   <script src="/_sdk/element_sdk.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/lucide@0.263.0/dist/umd/lucide.min.js"></script>
-  <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;700&amp;family=Orbitron:wght@400;700;900&amp;display=swap" rel="stylesheet">
-  <style>
-  html, body { height: 100%; margin: 0; padding: 0; overflow: hidden; touch-action: none; user-select: none; -webkit-user-select: none; }
-
-  :root {
-    --bg: #0a0a0f;
-    --surface: #141420;
-    --text: #e0e0f0;
-    --accent: #00e5ff;
-    --accent2: #ff3d71;
-    --scale-factor: 1;
-  }
-
-  /* --- Responsive Scaling --- */
-  @media (max-width: 1280px) { :root { --scale-factor: 0.85; } }
-  @media (max-width: 1024px) { :root { --scale-factor: 0.75; } }
-
-  /* --- UI Builder Specifics --- */
-  #workspace { 
-    width: 100vw; 
-    height: calc(100vh - 30px); 
-    position: relative; 
-    transform: scale(var(--scale-factor)); 
-    transform-origin: top left; 
-    width: calc(100vw / var(--scale-factor)); 
-    height: calc((100vh - 30px) / var(--scale-factor));
-  }
+  <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;700&family=Orbitron:wght@400;700;900&display=swap" rel="stylesheet">
   
-  .ui-group {
-    position: absolute;
-    --local-scale: 1; 
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    gap: calc(8px * var(--local-scale));
-    padding: calc(16px * var(--local-scale));
-  }
+  <link rel="stylesheet" href="style.css">
+</head>
 
-  .drag-handle {
-    width: 100%; height: calc(20px * var(--local-scale));
-    background: rgba(0, 229, 255, 0.1);
-    cursor: grab; display: flex; align-items: center; justify-content: center;
-    border-radius: 4px; opacity: 0; transition: opacity 0.2s;
-    color: var(--accent); font-size: calc(10px * var(--local-scale));
-    font-family: 'Orbitron', sans-serif; margin-bottom: calc(4px * var(--local-scale));
-    touch-action: none; pointer-events: none;
-  }
-  .ui-group:hover .drag-handle { opacity: 1; }
-  .drag-handle:active { cursor: grabbing; }
-  .edit-mode-active .drag-handle { pointer-events: auto; }
-  body:not(.edit-mode-active) .drag-handle { display: none !important; }
-  
-  .resize-handle {
-    position: absolute; bottom: 0; right: 0;
-    width: 15px; height: 15px;
-    background: var(--accent); opacity: 0; cursor: nwse-resize;
-    clip-path: polygon(100% 0, 100% 100%, 0 100%);
-    transition: opacity 0.2s; pointer-events: none;
-  }
-  .ui-group:hover .resize-handle { opacity: 0.7; }
-  .edit-mode-active .resize-handle { pointer-events: auto; }
-  body:not(.edit-mode-active) .resize-handle { display: none !important; }
+<body style="background: #0a0a0f; color: #e0e0f0;">
+    <div id="gameControls" style="display: none; position: fixed; top: 20px; left: 20px; z-index: 9999;">
+      
+      <button id="settingsToggleBtn" style="padding: 10px; background: rgba(0, 229, 255, 0.1); border: 2px solid #00e5ff; color: #00e5ff; border-radius: 8px; cursor: pointer;">
+          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"></circle><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"></path></svg>
+      </button>
 
-  .export-btn {
-    position: fixed; top: 16px; right: 16px; z-index: 1000;
-    padding: 8px 16px; background: rgba(0, 229, 255, 0.2);
-    border: 1px solid var(--accent); color: var(--accent);
-    font-family: 'Orbitron'; cursor: pointer; border-radius: 4px;
-  }
-  .export-btn:hover { background: rgba(0, 229, 255, 0.4); }
+      <div id="settingsMenu" class="settings-menu">
+         <button id="editLayoutBtn" style="padding: 8px 16px; font-family: 'Orbitron'; background: transparent; border: 1px solid #00e5ff; color: #00e5ff; border-radius: 4px; cursor: pointer;">EDIT LAYOUT</button>
+         <button id="fullscreenBtn" style="padding: 8px 16px; font-family: 'Orbitron'; background: transparent; border: 1px solid #00e5ff; color: #00e5ff; border-radius: 4px; cursor: pointer;">FULLSCREEN</button>
+         <button onclick="location.reload()" style="padding: 8px 16px; font-family: 'Orbitron'; background: transparent; border: 1px solid #ff3d71; color: #ff3d71; border-radius: 4px; cursor: pointer;">EXIT APP</button>
+      </div>
 
-  /* --- Controller Components --- */
-  .hud-panel {
-    background: rgba(20, 20, 32, 0.85);
-    border: 1px solid rgba(0, 229, 255, 0.2);
-    backdrop-filter: blur(8px);
-    border-radius: calc(8px * var(--local-scale));
-    padding: calc(12px * var(--local-scale));
-    box-shadow: 0 0 20px rgba(0, 229, 255, 0.05), inset 0 1px 0 rgba(255,255,255,0.03);
-  }
+  </div>
 
-  .btn-action {
-    width: calc(80px * var(--local-scale));
-    height: calc(80px * var(--local-scale));
-    border-radius: 50%; display: flex; align-items: center; justify-content: center;
-    font-family: 'Orbitron', sans-serif; font-weight: 900;
-    font-size: calc(40px * var(--local-scale)); 
-    transition: all 0.08s ease; position: relative; cursor: pointer;
-    border: 2px solid; flex-shrink: 0; touch-action: none;
-  }
-  .btn-action.pressed { transform: scale(0.9); }
-  .btn-action .glow { position: absolute; inset: -4px; border-radius: 50%; opacity: 0; transition: opacity 0.1s; pointer-events: none; }
-  .btn-action.pressed .glow { opacity: 1; }
-
-  .btn-triangle { border-color: #7edc98; color: #7edc98; background: rgba(126,220,152,0.08); }
-  .btn-triangle.pressed { background: rgba(126,220,152,0.3); box-shadow: 0 0 20px rgba(126,220,152,0.4); }
-  .btn-circle { border-color: #ff6b6b; color: #ff6b6b; background: rgba(255,107,107,0.08); }
-  .btn-circle.pressed { background: rgba(255,107,107,0.3); box-shadow: 0 0 20px rgba(255,107,107,0.4); }
-  .btn-cross { border-color: #6ba5ff; color: #6ba5ff; background: rgba(107,165,255,0.08); }
-  .btn-cross.pressed { background: rgba(107,165,255,0.3); box-shadow: 0 0 20px rgba(107,165,255,0.4); }
-  .btn-square { border-color: #d88aff; color: #d88aff; background: rgba(216,138,255,0.08); }
-  .btn-square.pressed { background: rgba(216,138,255,0.3); box-shadow: 0 0 20px rgba(216,138,255,0.4); }
-
-  .dpad-btn {
-    width: calc(56px * var(--local-scale)); height: calc(56px * var(--local-scale));
-    background: rgba(0, 229, 255, 0.06); border: 1px solid rgba(0, 229, 255, 0.25);
-    display: flex; align-items: center; justify-content: center;
-    color: var(--accent); transition: all 0.08s; cursor: pointer; flex-shrink: 0; touch-action: none;
-  }
-  .dpad-btn.pressed { background: rgba(0, 229, 255, 0.3); box-shadow: 0 0 15px rgba(0, 229, 255, 0.4); border-color: var(--accent); }
-
-  .shoulder-btn {
-    padding: calc(10px * var(--local-scale)) calc(24px * var(--local-scale));
-    font-family: 'Orbitron', sans-serif; font-size: calc(13px * var(--local-scale));
-    font-weight: 700; border: 1px solid rgba(0, 229, 255, 0.3);
-    background: rgba(0, 229, 255, 0.06); color: var(--accent);
-    cursor: pointer; border-radius: 6px; flex-shrink: 0; touch-action: none;
-  }
-  .shoulder-btn.pressed { background: rgba(0, 229, 255, 0.3); box-shadow: 0 0 15px rgba(0, 229, 255, 0.3); }
-
-  .meta-btn {
-    padding: calc(8px * var(--local-scale)) calc(20px * var(--local-scale));
-    font-family: 'Orbitron'; font-size: calc(10px * var(--local-scale));
-    border: 1px solid rgba(255, 255, 255, 0.15); background: rgba(255, 255, 255, 0.04);
-    color: rgba(255, 255, 255, 0.5); border-radius: 12px; cursor: pointer; letter-spacing: 1px; touch-action: none;
-  }
-  .meta-btn.pressed { background: rgba(255, 255, 255, 0.15); color: #fff; border-color: rgba(255,255,255,0.4); }
-
-  .stick-zone {
-    width: calc(160px * var(--local-scale)); height: calc(160px * var(--local-scale));
-    border-radius: 50%; background: rgba(0,0,0,0.4); border: 1px solid rgba(0, 229, 255, 0.15);
-    position: relative; touch-action: none; flex-shrink: 0; cursor: crosshair;
-  }
-  .stick-thumb {
-    width: calc(54px * var(--local-scale)); height: calc(54px * var(--local-scale));
-    border-radius: 50%; background: radial-gradient(circle at 40% 35%, rgba(0,229,255,0.3), rgba(0,229,255,0.08));
-    border: 2px solid rgba(0, 229, 255, 0.4); position: absolute; top: 50%; left: 50%;
-    transform: translate(-50%, -50%); pointer-events: none; transition: box-shadow 0.1s;
-  }
-  .stick-thumb.active { box-shadow: 0 0 20px rgba(0, 229, 255, 0.5); border-color: var(--accent); }
-  .stick-crosshair { position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); width: 80%; height: 80%; pointer-events: none; }
-  .stick-crosshair::before, .stick-crosshair::after { content: ''; position: absolute; background: rgba(0, 229, 255, 0.08); }
-  .stick-crosshair::before { width: 1px; height: 100%; left: 50%; top: 0; }
-  .stick-crosshair::after { height: 1px; width: 100%; top: 50%; left: 0; }
-
-  .stick-label-btn {
-    width: calc(32px * var(--local-scale)); height: calc(32px * var(--local-scale));
-    border-radius: 50%; border: 1px solid rgba(0, 229, 255, 0.2);
-    background: rgba(0, 229, 255, 0.04); font-family: 'Orbitron';
-    font-size: calc(10px * var(--local-scale)); color: rgba(0,229,255,0.5);
-    display: flex; align-items: center; justify-content: center; cursor: pointer; flex-shrink: 0; touch-action: none;
-  }
-  .stick-label-btn.pressed { background: rgba(0, 229, 255, 0.3); color: #fff; border-color: var(--accent); }
-
-  .hex-display { font-family: 'JetBrains Mono', monospace; font-size: calc(15px * var(--local-scale)); letter-spacing: 1px; }
-  .byte-cell {
-    display: inline-flex; align-items: center; justify-content: center;
-    width: calc(42px * var(--local-scale)); height: calc(32px * var(--local-scale));
-    background: rgba(0,0,0,0.4); border: 1px solid rgba(0, 229, 255, 0.12); border-radius: 3px;
-    transition: all 0.15s; flex-shrink: 0;
-  }
-  .byte-cell.changed { border-color: var(--accent); box-shadow: 0 0 8px rgba(0, 229, 255, 0.3); color: var(--accent); }
-  .byte-label { font-size: calc(8px * var(--local-scale)); opacity: 0.4; margin-top: calc(4px * var(--local-scale)); text-align: center; }
-
-  .scanline { position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: repeating-linear-gradient(0deg, transparent, transparent 2px, rgba(0,0,0,0.03) 2px, rgba(0,0,0,0.03) 4px); pointer-events: none; z-index: 999; }
-  
-  .pdf-btn { padding: calc(8px * var(--local-scale)) calc(16px * var(--local-scale)); font-family: 'Orbitron', sans-serif; font-size: calc(11px * var(--local-scale)); font-weight: 700; border: 1px solid rgba(255, 61, 113, 0.4); background: rgba(255, 61, 113, 0.08); color: var(--accent2); border-radius: 4px; cursor: pointer; transition: all 0.15s; flex-shrink: 0; display: flex; align-items: center; gap: calc(4px * var(--local-scale)); }
-  .pdf-btn:hover { background: rgba(255, 61, 113, 0.2); }
-
-  @keyframes blink-highlight { 0%, 100% { background: rgba(0, 229, 255, 0.2); } 50% { background: rgba(0, 229, 255, 0.6); } }
-  .settings-blinking { animation: blink-highlight 0.6s ease-in-out infinite; }
-
-  footer { position: fixed; bottom: 0; left: 0; right: 0; padding: 8px 16px; display: flex; justify-content: space-between; align-items: center; font-size: 10px; opacity: 0.4; font-family: 'JetBrains Mono', monospace; pointer-events: none; background: rgba(10,10,15,0.9); z-index: 900;}
-
-  @keyframes handshake-bounce {
-    0%, 100% { transform: translateY(0); }
-    50% { transform: translateY(-5px); }
-  }
-  .handshake-anim {
-    display: inline-block;
-    animation: handshake-bounce 0.6s ease-in-out infinite;
-  }
-  </style>
- <style>*, ::before, ::after{--tw-border-spacing-x:0;--tw-border-spacing-y:0;--tw-translate-x:0;--tw-translate-y:0;--tw-rotate:0;--tw-skew-x:0;--tw-skew-y:0;--tw-scale-x:1;--tw-scale-y:1;--tw-pan-x: ;--tw-pan-y: ;--tw-pinch-zoom: ;--tw-scroll-snap-strictness:proximity;--tw-gradient-from-position: ;--tw-gradient-via-position: ;--tw-gradient-to-position: ;--tw-ordinal: ;--tw-slashed-zero: ;--tw-numeric-figure: ;--tw-numeric-spacing: ;--tw-numeric-fraction: ;--tw-ring-inset: ;--tw-ring-offset-width:0px;--tw-ring-offset-color:#fff;--tw-ring-color:rgb(59 130 246 / 0.5);--tw-ring-offset-shadow:0 0 #0000;--tw-ring-shadow:0 0 #0000;--tw-shadow:0 0 #0000;--tw-shadow-colored:0 0 #0000;--tw-blur: ;--tw-brightness: ;--tw-contrast: ;--tw-grayscale: ;--tw-hue-rotate: ;--tw-invert: ;--tw-saturate: ;--tw-sepia: ;--tw-drop-shadow: ;--tw-backdrop-blur: ;--tw-backdrop-brightness: ;--tw-backdrop-contrast: ;--tw-backdrop-grayscale: ;--tw-backdrop-hue-rotate: ;--tw-backdrop-invert: ;--tw-backdrop-opacity: ;--tw-backdrop-saturate: ;--tw-backdrop-sepia: ;--tw-contain-size: ;--tw-contain-layout: ;--tw-contain-paint: ;--tw-contain-style: }::backdrop{--tw-border-spacing-x:0;--tw-border-spacing-y:0;--tw-translate-x:0;--tw-translate-y:0;--tw-rotate:0;--tw-skew-x:0;--tw-skew-y:0;--tw-scale-x:1;--tw-scale-y:1;--tw-pan-x: ;--tw-pan-y: ;--tw-pinch-zoom: ;--tw-scroll-snap-strictness:proximity;--tw-gradient-from-position: ;--tw-gradient-via-position: ;--tw-gradient-to-position: ;--tw-ordinal: ;--tw-slashed-zero: ;--tw-numeric-figure: ;--tw-numeric-spacing: ;--tw-numeric-fraction: ;--tw-ring-inset: ;--tw-ring-offset-width:0px;--tw-ring-offset-color:#fff;--tw-ring-color:rgb(59 130 246 / 0.5);--tw-ring-offset-shadow:0 0 #0000;--tw-ring-shadow:0 0 #0000;--tw-shadow:0 0 #0000;--tw-shadow-colored:0 0 #0000;--tw-blur: ;--tw-brightness: ;--tw-contrast: ;--tw-grayscale: ;--tw-hue-rotate: ;--tw-invert: ;--tw-saturate: ;--tw-sepia: ;--tw-drop-shadow: ;--tw-backdrop-blur: ;--tw-backdrop-brightness: ;--tw-backdrop-contrast: ;--tw-backdrop-grayscale: ;--tw-backdrop-hue-rotate: ;--tw-backdrop-invert: ;--tw-backdrop-opacity: ;--tw-backdrop-saturate: ;--tw-backdrop-sepia: ;--tw-contain-size: ;--tw-contain-layout: ;--tw-contain-paint: ;--tw-contain-style: }/* ! tailwindcss v3.4.17 | MIT License | https://tailwindcss.com */*,::after,::before{box-sizing:border-box;border-width:0;border-style:solid;border-color:#e5e7eb}::after,::before{--tw-content:''}:host,html{line-height:1.5;-webkit-text-size-adjust:100%;-moz-tab-size:4;tab-size:4;font-family:ui-sans-serif, system-ui, sans-serif, "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol", "Noto Color Emoji";font-feature-settings:normal;font-variation-settings:normal;-webkit-tap-highlight-color:transparent}body{margin:0;line-height:inherit}hr{height:0;color:inherit;border-top-width:1px}abbr:where([title]){-webkit-text-decoration:underline dotted;text-decoration:underline dotted}h1,h2,h3,h4,h5,h6{font-size:inherit;font-weight:inherit}a{color:inherit;text-decoration:inherit}b,strong{font-weight:bolder}code,kbd,pre,samp{font-family:ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;font-feature-settings:normal;font-variation-settings:normal;font-size:1em}small{font-size:80%}sub,sup{font-size:75%;line-height:0;position:relative;vertical-align:baseline}sub{bottom:-.25em}sup{top:-.5em}table{text-indent:0;border-color:inherit;border-collapse:collapse}button,input,optgroup,select,textarea{font-family:inherit;font-feature-settings:inherit;font-variation-settings:inherit;font-size:100%;font-weight:inherit;line-height:inherit;letter-spacing:inherit;color:inherit;margin:0;padding:0}button,select{text-transform:none}button,input:where([type=button]),input:where([type=reset]),input:where([type=submit]){-webkit-appearance:button;background-color:transparent;background-image:none}:-moz-focusring{outline:auto}:-moz-ui-invalid{box-shadow:none}progress{vertical-align:baseline}::-webkit-inner-spin-button,::-webkit-outer-spin-button{height:auto}[type=search]{-webkit-appearance:textfield;outline-offset:-2px}::-webkit-search-decoration{-webkit-appearance:none}::-webkit-file-upload-button{-webkit-appearance:button;font:inherit}summary{display:list-item}blockquote,dd,dl,figure,h1,h2,h3,h4,h5,h6,hr,p,pre{margin:0}fieldset{margin:0;padding:0}legend{padding:0}menu,ol,ul{list-style:none;margin:0;padding:0}dialog{padding:0}textarea{resize:vertical}input::placeholder,textarea::placeholder{opacity:1;color:#9ca3af}[role=button],button{cursor:pointer}:disabled{cursor:default}audio,canvas,embed,iframe,img,object,svg,video{display:block;vertical-align:middle}img,video{max-width:100%;height:auto}[hidden]:where(:not([hidden=until-found])){display:none}.h-full{height:100%}</style><style>*, ::before, ::after{--tw-border-spacing-x:0;--tw-border-spacing-y:0;--tw-translate-x:0;--tw-translate-y:0;--tw-rotate:0;--tw-skew-x:0;--tw-skew-y:0;--tw-scale-x:1;--tw-scale-y:1;--tw-pan-x: ;--tw-pan-y: ;--tw-pinch-zoom: ;--tw-scroll-snap-strictness:proximity;--tw-gradient-from-position: ;--tw-gradient-via-position: ;--tw-gradient-to-position: ;--tw-ordinal: ;--tw-slashed-zero: ;--tw-numeric-figure: ;--tw-numeric-spacing: ;--tw-numeric-fraction: ;--tw-ring-inset: ;--tw-ring-offset-width:0px;--tw-ring-offset-color:#fff;--tw-ring-color:rgb(59 130 246 / 0.5);--tw-ring-offset-shadow:0 0 #0000;--tw-ring-shadow:0 0 #0000;--tw-shadow:0 0 #0000;--tw-shadow-colored:0 0 #0000;--tw-blur: ;--tw-brightness: ;--tw-contrast: ;--tw-grayscale: ;--tw-hue-rotate: ;--tw-invert: ;--tw-saturate: ;--tw-sepia: ;--tw-drop-shadow: ;--tw-backdrop-blur: ;--tw-backdrop-brightness: ;--tw-backdrop-contrast: ;--tw-backdrop-grayscale: ;--tw-backdrop-hue-rotate: ;--tw-backdrop-invert: ;--tw-backdrop-opacity: ;--tw-backdrop-saturate: ;--tw-backdrop-sepia: ;--tw-contain-size: ;--tw-contain-layout: ;--tw-contain-paint: ;--tw-contain-style: }::backdrop{--tw-border-spacing-x:0;--tw-border-spacing-y:0;--tw-translate-x:0;--tw-translate-y:0;--tw-rotate:0;--tw-skew-x:0;--tw-skew-y:0;--tw-scale-x:1;--tw-scale-y:1;--tw-pan-x: ;--tw-pan-y: ;--tw-pinch-zoom: ;--tw-scroll-snap-strictness:proximity;--tw-gradient-from-position: ;--tw-gradient-via-position: ;--tw-gradient-to-position: ;--tw-ordinal: ;--tw-slashed-zero: ;--tw-numeric-figure: ;--tw-numeric-spacing: ;--tw-numeric-fraction: ;--tw-ring-inset: ;--tw-ring-offset-width:0px;--tw-ring-offset-color:#fff;--tw-ring-color:rgb(59 130 246 / 0.5);--tw-ring-offset-shadow:0 0 #0000;--tw-ring-shadow:0 0 #0000;--tw-shadow:0 0 #0000;--tw-shadow-colored:0 0 #0000;--tw-blur: ;--tw-brightness: ;--tw-contrast: ;--tw-grayscale: ;--tw-hue-rotate: ;--tw-invert: ;--tw-saturate: ;--tw-sepia: ;--tw-drop-shadow: ;--tw-backdrop-blur: ;--tw-backdrop-brightness: ;--tw-backdrop-contrast: ;--tw-backdrop-grayscale: ;--tw-backdrop-hue-rotate: ;--tw-backdrop-invert: ;--tw-backdrop-opacity: ;--tw-backdrop-saturate: ;--tw-backdrop-sepia: ;--tw-contain-size: ;--tw-contain-layout: ;--tw-contain-paint: ;--tw-contain-style: }/* ! tailwindcss v3.4.17 | MIT License | https://tailwindcss.com */*,::after,::before{box-sizing:border-box;border-width:0;border-style:solid;border-color:#e5e7eb}::after,::before{--tw-content:''}:host,html{line-height:1.5;-webkit-text-size-adjust:100%;-moz-tab-size:4;tab-size:4;font-family:ui-sans-serif, system-ui, sans-serif, "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol", "Noto Color Emoji";font-feature-settings:normal;font-variation-settings:normal;-webkit-tap-highlight-color:transparent}body{margin:0;line-height:inherit}hr{height:0;color:inherit;border-top-width:1px}abbr:where([title]){-webkit-text-decoration:underline dotted;text-decoration:underline dotted}h1,h2,h3,h4,h5,h6{font-size:inherit;font-weight:inherit}a{color:inherit;text-decoration:inherit}b,strong{font-weight:bolder}code,kbd,pre,samp{font-family:ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;font-feature-settings:normal;font-variation-settings:normal;font-size:1em}small{font-size:80%}sub,sup{font-size:75%;line-height:0;position:relative;vertical-align:baseline}sub{bottom:-.25em}sup{top:-.5em}table{text-indent:0;border-color:inherit;border-collapse:collapse}button,input,optgroup,select,textarea{font-family:inherit;font-feature-settings:inherit;font-variation-settings:inherit;font-size:100%;font-weight:inherit;line-height:inherit;letter-spacing:inherit;color:inherit;margin:0;padding:0}button,select{text-transform:none}button,input:where([type=button]),input:where([type=reset]),input:where([type=submit]){-webkit-appearance:button;background-color:transparent;background-image:none}:-moz-focusring{outline:auto}:-moz-ui-invalid{box-shadow:none}progress{vertical-align:baseline}::-webkit-inner-spin-button,::-webkit-outer-spin-button{height:auto}[type=search]{-webkit-appearance:textfield;outline-offset:-2px}::-webkit-search-decoration{-webkit-appearance:none}::-webkit-file-upload-button{-webkit-appearance:button;font:inherit}summary{display:list-item}blockquote,dd,dl,figure,h1,h2,h3,h4,h5,h6,hr,p,pre{margin:0}fieldset{margin:0;padding:0}legend{padding:0}menu,ol,ul{list-style:none;margin:0;padding:0}dialog{padding:0}textarea{resize:vertical}input::placeholder,textarea::placeholder{opacity:1;color:#9ca3af}[role=button],button{cursor:pointer}:disabled{cursor:default}audio,canvas,embed,iframe,img,object,svg,video{display:block;vertical-align:middle}img,video{max-width:100%;height:auto}[hidden]:where(:not([hidden=until-found])){display:none}.h-full{height:100%}</style></head>
- <body style="background: var(--bg); color: var(--text);" class="">
   <div id="connectOverlay" style="position: fixed; inset: 0px; z-index: 10000; display: flex; flex-direction: column; align-items: center; justify-content: center; background: rgb(8, 8, 12);">
+    <h1 style="font-family: 'Orbitron', sans-serif; font-size: clamp(1.5rem, 6vw, 3.5rem); font-weight: 900; color: #00e5ff; margin-bottom: 30px;">Elvira Mando HUD</h1>
     
-    <h1 style="font-family: 'Orbitron', sans-serif; font-size: clamp(1.5rem, 6vw, 3.5rem); font-weight: 900; color: var(--accent); margin-bottom: clamp(10px, 3vh, 30px); text-align: center; text-transform: uppercase; letter-spacing: 2px; text-shadow: 0 0 15px var(--accent); white-space: nowrap;">Elvira Mando HUD</h1>
-    
-    <select id="channelSelect" style="margin-bottom: clamp(10px, 3vh, 30px); padding: 12px 24px; background: rgba(0, 229, 255, 0.05); color: var(--accent); border: 1px solid var(--accent); border-radius: 8px; font-family: 'Orbitron', sans-serif; font-size: 1.2rem; cursor: pointer; outline: none;">
-      <option value="DEBUG">DEBUG (Test UI / No BLE)</option>
-      <option value="1">Channel 1</option> <option value="2">Channel 2</option>
-      <option value="3">Channel 3</option> <option value="4">Channel 4</option>
-      <option value="5">Channel 5</option> <option value="6">Channel 6</option>
-      <option value="7">Channel 7</option> <option value="8">Channel 8</option>
-      <option value="9">Channel 9</option> <option value="10">Channel 10</option>
+    <select id="channelSelect" style="margin-bottom: 30px; padding: 12px; font-family: 'JetBrains Mono'; background: rgba(0, 0, 0, 0.5); border: 1px solid #00e5ff; color: #00e5ff; border-radius: 8px;">
+        <option value="DEBUG">DEBUG (Test UI / No BLE)</option>
+        <option value="1">Channel 1</option>
+        <option value="2">Channel 2</option>
+        <option value="3">Channel 3</option>
     </select>
     
-    <button onclick="connectBluetooth()" style="padding: 16px 32px; font-family: 'Orbitron', sans-serif; font-size: 1.2rem; font-weight: 900; background: rgba(0, 229, 255, 0.1); border: 2px solid var(--accent); color: var(--accent); border-radius: 8px; cursor: pointer; transition: all 0.2s; box-shadow: 0 0 15px rgba(0, 229, 255, 0.2);">
-      CONNECT TO CONTROLLER
+    <button id="connectBtn" style="padding: 16px 32px; font-family: 'Orbitron'; font-size: 1.2rem; font-weight: 900; background: rgba(0, 229, 255, 0.1); border: 2px solid #00e5ff; color: #00e5ff; border-radius: 8px; cursor: pointer;">
+        CONNECT TO CONTROLLER
     </button>
-    <p id="statusText" style="margin-top: 30px; font-family: 'JetBrains Mono', monospace; color: #ff3d71; font-size: 1rem;">Status: Disconnected</p>
-  </div>
-  <div class="scanline"></div>
-  
-  <div id="exitBtnContainer" style="display: none; position: fixed; top: 20px; left: 20px; z-index: 9999;">
-    <button onclick="disconnectAndExit()" style="padding: 10px 20px; font-family: 'Orbitron', sans-serif; font-size: 1rem; font-weight: bold; background: rgba(255, 61, 113, 0.1); border: 2px solid var(--accent2); color: var(--accent2); border-radius: 8px; cursor: pointer; transition: all 0.2s; box-shadow: 0 0 10px rgba(255, 61, 113, 0.2);">
-      EXIT
-    </button>
+    <p id="statusText" style="margin-top: 30px; font-family: 'JetBrains Mono'; color: #ff3d71;">Status: Disconnected</p>
   </div>
 
-  <div style="position: fixed; top: 16px; right: 16px; z-index: 1000;">
-   <button class="export-btn" id="settingsBtn" onclick="toggleSettingsMenu()" style="display: flex; align-items: center; justify-content: center; padding: 8px 12px;">
-    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" data-lucide="settings" style="width: 18px; height: 18px;" class="lucide lucide-settings"><path d="M12.22 2h-.44a2 2 0 0 0-2 2v.18a2 2 0 0 1-1 1.73l-.43.25a2 2 0 0 1-2 0l-.15-.08a2 2 0 0 0-2.73.73l-.22.38a2 2 0 0 0 .73 2.73l.15.1a2 2 0 0 1 1 1.72v.51a2 2 0 0 1-1 1.74l-.15.09a2 2 0 0 0-.73 2.73l.22.38a2 2 0 0 0 2.73.73l.15-.08a2 2 0 0 1 2 0l.43.25a2 2 0 0 1 1 1.73V20a2 2 0 0 0 2 2h.44a2 2 0 0 0 2-2v-.18a2 2 0 0 1 1-1.73l.43-.25a2 2 0 0 1 2 0l.15.08a2 2 0 0 0 2.73-.73l.22-.39a2 2 0 0 0-.73-2.73l-.15-.08a2 2 0 0 1-1-1.74v-.5a2 2 0 0 1 1-1.74l.15-.09a2 2 0 0 0 .73-2.73l-.22-.38a2 2 0 0 0-2.73-.73l-.15.08a2 2 0 0 1-2 0l-.43-.25a2 2 0 0 1-1-1.73V4a2 2 0 0 0-2-2z"></path><circle cx="12" cy="12" r="3"></circle></svg>
-   </button>
-   <div id="settingsMenu" style="display: block; position: absolute; top: 100%; right: 0px; margin-top: 8px; background: rgba(20, 20, 32, 0.95); border: 1px solid rgba(0, 229, 255, 0.3); border-radius: 8px; overflow: hidden; min-width: 200px; z-index: 1000;">
-    <button id="fullscreenBtn" onclick="toggleFullscreen()" style="width: 100%; padding: 12px 16px; text-align: left; background: transparent; border: none; color: var(--accent); font-family: 'Orbitron'; font-size: 12px; cursor: pointer; border-bottom: 1px solid rgba(0, 229, 255, 0.1);"> <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" data-lucide="maximize" style="width: 16px; height: 16px; display: inline-block; margin-right: 8px; vertical-align: middle;" class="lucide lucide-maximize"><path d="M8 3H5a2 2 0 0 0-2 2v3"></path><path d="M21 8V5a2 2 0 0 0-2-2h-3"></path><path d="M3 16v3a2 2 0 0 0 2 2h3"></path><path d="M16 21h3a2 2 0 0 0 2-2v-3"></path></svg> <span id="fullscreenLabel">Exit Fullscreen</span> </button> 
-    <button onclick="toggleEditMode()" id="editModeBtn" style="width: 100%; padding: 12px 16px; text-align: left; background: transparent; border-top: none; border-right: none; border-left: none; border-image: initial; color: var(--accent); font-family: Orbitron; font-size: 12px; cursor: pointer; border-bottom: 1px solid rgba(0, 229, 255, 0.1);"> <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" data-lucide="move" style="width: 16px; height: 16px; display: inline-block; margin-right: 8px; vertical-align: middle;" class="lucide lucide-move"><polyline points="5 9 2 12 5 15"></polyline><polyline points="9 5 12 2 15 5"></polyline><polyline points="15 19 12 22 9 19"></polyline><polyline points="19 9 22 12 19 15"></polyline><line x1="2" x2="22" y1="12" y2="12"></line><line x1="12" x2="12" y1="2" y2="22"></line></svg> <span id="editModeLabel">Layout Editor</span> </button> 
-    <button onclick="resetLayout()" style="width: 100%; padding: 12px 16px; text-align: left; background: transparent; border: none; color: var(--accent); font-family: 'Orbitron'; font-size: 12px; cursor: pointer; border-bottom: 1px solid rgba(0, 229, 255, 0.1);"> <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" data-lucide="rotate-ccw" style="width: 16px; height: 16px; display: inline-block; margin-right: 8px; vertical-align: middle;" class="lucide lucide-rotate-ccw"><path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"></path><path d="M3 3v5h5"></path></svg> Reset Layout </button> 
-    <button onclick="exportCode()" style="width: 100%; padding: 12px 16px; text-align: left; background: transparent; border: none; color: var(--accent); font-family: 'Orbitron'; font-size: 12px; cursor: pointer;"> <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" data-lucide="download" style="width: 16px; height: 16px; display: inline-block; margin-right: 8px; vertical-align: middle;" class="lucide lucide-download"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="7 10 12 15 17 10"></polyline><line x1="12" x2="12" y1="15" y2="3"></line></svg> Export Layout </button>
-   </div>
-  </div>
+  <div class="scanline"></div>
 
   <div id="workspace" style="cursor: default;">
    <div class="ui-group" id="group-l1l2" style="left: 198.873px; top: 21.6683px; --local-scale: 1.05;">
@@ -264,7 +88,12 @@
    <div class="ui-group" id="group-rawdata" style="left: 277.903px; top: 85.4688px; --local-scale: 1.05;">
     <div class="drag-handle">≡ Raw Data Map</div>
     <div class="hud-panel">
-     <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: calc(8px * var(--local-scale));"><span style="font-size: calc(9px * var(--local-scale)); opacity: 0.4; letter-spacing: 2px;">RAW DATA — uint8_t[9]</span> <span id="dataStatus" style="font-size: calc(9px * var(--local-scale)); color: rgb(255, 61, 113); font-weight: bold;">● BLE Asleep (Idle)</span></div>
+     <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: calc(8px * var(--local-scale));">
+         <span style="font-size: calc(9px * var(--local-scale)); opacity: 0.4; letter-spacing: 2px;">RAW DATA — uint8_t[9]</span> 
+         
+         <span id="bleStatusText" style="font-size: calc(9px * var(--local-scale)); color: #ff3d71; font-weight: bold;">*Disconnected</span>
+     
+     </div>
      <div class="hex-display" id="hexDisplay" style="display: flex; gap: calc(4px * var(--local-scale));"><div style="display: flex; flex-direction: column; align-items: center;"><span class="byte-cell" id="byte0">0xFF</span><span class="byte-label">HDR</span></div><div style="display: flex; flex-direction: column; align-items: center;"><span class="byte-cell" id="byte1">0x73</span><span class="byte-label">MODE</span></div><div style="display: flex; flex-direction: column; align-items: center;"><span class="byte-cell" id="byte2">0x5A</span><span class="byte-label">ACK</span></div><div style="display: flex; flex-direction: column; align-items: center;"><span class="byte-cell" id="byte3">0xFF</span><span class="byte-label">BTN1</span></div><div style="display: flex; flex-direction: column; align-items: center;"><span class="byte-cell" id="byte4">0xFF</span><span class="byte-label">BTN2</span></div><div style="display: flex; flex-direction: column; align-items: center;"><span class="byte-cell" id="byte5">0x80</span><span class="byte-label">RX</span></div><div style="display: flex; flex-direction: column; align-items: center;"><span class="byte-cell" id="byte6">0x80</span><span class="byte-label">RY</span></div><div style="display: flex; flex-direction: column; align-items: center;"><span class="byte-cell" id="byte7">0x80</span><span class="byte-label">LX</span></div><div style="display: flex; flex-direction: column; align-items: center;"><span class="byte-cell" id="byte8">0x80</span><span class="byte-label">LY</span></div></div>
     </div>
     <div class="resize-handle"></div>
@@ -292,13 +121,13 @@
     <div class="drag-handle">≡ Actions</div>
     <div style="display: grid; grid-template-columns: 1fr 1fr 1fr; width: calc(184px * var(--local-scale)); gap: calc(4px * var(--local-scale));">
      <div></div>
-     <div style="display: flex; justify-content: center;"><button class="btn-action btn-triangle" data-btn="Triangle"><div class="glow"></div><span>△</span></button></div>
+     <div style="display: flex; justify-content: center;"><button class="btn-action btn-triangle" data-btn="TRI"><div class="glow"></div><span>△</span></button></div>
      <div></div>
-     <div style="display: flex; justify-content: flex-end;"><button class="btn-action btn-square" data-btn="Square"><div class="glow"></div><span>▢</span></button></div>
+     <div style="display: flex; justify-content: flex-end;"><button class="btn-action btn-square" data-btn="SQ"><div class="glow"></div><span>▢</span></button></div>
      <div></div>
-     <div style="display: flex; justify-content: flex-start;"><button class="btn-action btn-circle" data-btn="Circle"><div class="glow"></div><span>◯</span></button></div>
+     <div style="display: flex; justify-content: flex-start;"><button class="btn-action btn-circle" data-btn="CRC"><div class="glow"></div><span>◯</span></button></div>
      <div></div>
-     <div style="display: flex; justify-content: center;"><button class="btn-action btn-cross" data-btn="Cross"><div class="glow"></div><span>✕</span></button></div>
+     <div style="display: flex; justify-content: center;"><button class="btn-action btn-cross" data-btn="CRS"><div class="glow"></div><span>✕</span></button></div>
      <div></div>
     </div>
     <div class="resize-handle"></div>
@@ -321,429 +150,6 @@
    </div>
   </div>
   <footer><span>DUALSHOCK 2 — HID EMULATOR</span> <span id="clock">21:26:08</span></footer>
-  
-  <script>
-    lucide.createIcons();
-    
-    let ps2Data = new Uint8Array([255, 115, 90, 255, 255, 128, 128, 128, 128]);
-    let isConnected = false;
-    
-    // ===== UI BUILDER LOGIC (Keeps all your original layout features) =====
-    let editModeActive = false;
-    function toggleEditMode() {
-        editModeActive = !editModeActive;
-        if (editModeActive) {
-            document.body.classList.add('edit-mode-active');
-            document.getElementById('editModeLabel').textContent = 'Exit Edit Mode';
-        } else {
-            document.body.classList.remove('edit-mode-active');
-            document.getElementById('editModeLabel').textContent = 'Edit Layout';
-            saveLayout();
-        }
-        document.getElementById('settingsMenu').style.display = 'none';
-    }
-
-    function toggleSettingsMenu() {
-        const menu = document.getElementById('settingsMenu');
-        menu.style.display = menu.style.display === 'block' ? 'none' : 'block';
-    }
-
-    function toggleFullscreen() {
-        const exitLabel = document.getElementById('exitFullscreenLabel');
-        if (!document.fullscreenElement) {
-            document.documentElement.requestFullscreen();
-            document.getElementById('fullscreenLabel').textContent = 'Exit Fullscreen';
-            if (exitLabel) exitLabel.style.display = 'inline';
-        } else {
-            document.exitFullscreen();
-            document.getElementById('fullscreenLabel').textContent = 'Fullscreen';
-            if (exitLabel) exitLabel.style.display = 'none';
-        }
-        document.getElementById('settingsMenu').style.display = 'none';
-    }
-
-    // --- Drag & Drop ---
-    document.querySelectorAll('.ui-group').forEach(group => {
-        const dragHandle = group.querySelector('.drag-handle');
-        const resizeHandle = group.querySelector('.resize-handle');
-        
-        if (dragHandle) {
-            dragHandle.addEventListener('touchstart', (e) => {
-                if (!editModeActive) return;
-                e.preventDefault();
-                let startX = e.touches[0].clientX, startY = e.touches[0].clientY;
-                let rect = group.getBoundingClientRect();
-                let offsetX = startX - rect.left, offsetY = startY - rect.top;
-                
-                function move(e2) {
-                    group.style.left = `${e2.touches[0].clientX - offsetX}px`;
-                    group.style.top = `${e2.touches[0].clientY - offsetY}px`;
-                    group.style.right = 'auto'; group.style.bottom = 'auto';
-                }
-                function stop() { document.removeEventListener('touchmove', move); document.removeEventListener('touchend', stop); }
-                document.addEventListener('touchmove', move, {passive: false});
-                document.addEventListener('touchend', stop);
-            }, {passive: false});
-        }
-
-        if (resizeHandle) {
-            resizeHandle.addEventListener('touchstart', (e) => {
-                if (!editModeActive) return;
-                e.preventDefault();
-                let startX = e.touches[0].clientX;
-                let startScale = parseFloat(group.style.getPropertyValue('--local-scale')) || 1;
-                
-                function scale(e2) {
-                    let dx = e2.touches[0].clientX - startX;
-                    let newScale = Math.max(0.5, startScale + (dx * 0.01));
-                    group.style.setProperty('--local-scale', newScale.toFixed(2));
-                }
-                function stopScale() { document.removeEventListener('touchmove', scale); document.removeEventListener('touchend', stopScale); }
-                document.addEventListener('touchmove', scale, {passive: false});
-                document.addEventListener('touchend', stopScale);
-            }, {passive: false});
-        }
-    });
-
-    function saveLayout() {
-        const layout = {};
-        document.querySelectorAll('.ui-group').forEach(group => {
-            layout[group.id] = {
-                left: group.style.left, top: group.style.top,
-                right: group.style.right, bottom: group.style.bottom,
-                scale: group.style.getPropertyValue('--local-scale')
-            };
-        });
-        localStorage.setItem('ps2_hud_layout', JSON.stringify(layout));
-    }
-
-    function loadLayout() {
-        const saved = localStorage.getItem('ps2_hud_layout');
-        if (saved) {
-            try {
-                const layout = JSON.parse(saved);
-                for (const id in layout) {
-                    const el = document.getElementById(id);
-                    if (el) {
-                        if (layout[id].left) el.style.left = layout[id].left;
-                        if (layout[id].top) el.style.top = layout[id].top;
-                        if (layout[id].right) el.style.right = layout[id].right;
-                        if (layout[id].bottom) el.style.bottom = layout[id].bottom;
-                        if (layout[id].scale) el.style.setProperty('--local-scale', layout[id].scale);
-                    }
-                }
-            } catch(e) {}
-        }
-    }
-
-    function resetLayout() {
-        localStorage.removeItem('ps2_hud_layout');
-        location.reload();
-    }
-
-    // ===== PDF & CLOCK =====
-    function generatePDF() {
-        alert("PDF Reference generated!");
-    }
-    function updateClock() {
-        const clk = document.getElementById('clockDisplay');
-        if (clk) clk.textContent = new Date().toLocaleTimeString('en-US', { hour12: false, hour: '2-digit', minute: '2-digit', second: '2-digit' }) + ' MYT';
-    }
-
-    // ===== HEX DISPLAY =====
-    function buildHexDisplay() {
-        const container = document.getElementById('hexDisplay');
-        if (!container) return;
-        container.innerHTML = '';
-        for (let i = 0; i < 9; i++) {
-            const col = document.createElement('div');
-            col.style.display = 'flex'; col.style.flexDirection = 'column'; col.style.alignItems = 'center'; col.style.gap = '2px';
-            const label = document.createElement('div');
-            label.textContent = `B${i}`; label.style.fontSize = '8px'; label.style.color = '#666';
-            const val = document.createElement('div');
-            val.id = `hex-byte-${i}`; val.textContent = 'FF';
-            val.style.fontFamily = 'monospace'; val.style.fontSize = '12px'; val.style.color = 'var(--accent)';
-            col.appendChild(label); col.appendChild(val); container.appendChild(col);
-        }
-    }
-
-    function updateHexDisplay() {
-        for (let i = 0; i < 9; i++) {
-            const el = document.getElementById(`hex-byte-${i}`);
-            if (el) el.textContent = ps2Data[i].toString(16).toUpperCase().padStart(2, '0');
-        }
-    }
-
-    // ===== TOUCH BUTTON LOGIC =====
-    const btnMapping = {
-        'Up': { byte: 3, mask: ~0x10 }, 'Down': { byte: 3, mask: ~0x40 }, 'Left': { byte: 3, mask: ~0x80 }, 'Right': { byte: 3, mask: ~0x20 },
-        'Triangle': { byte: 4, mask: ~0x10 }, 'Cross': { byte: 4, mask: ~0x40 }, 'Square': { byte: 4, mask: ~0x80 }, 'Circle': { byte: 4, mask: ~0x20 },
-        'L1': { byte: 4, mask: ~0x04 }, 'R1': { byte: 4, mask: ~0x08 }, 'L2': { byte: 4, mask: ~0x01 }, 'R2': { byte: 4, mask: ~0x02 },
-        'Select': { byte: 3, mask: ~0x01 }, 'Start': { byte: 3, mask: ~0x08 }
-    };
-
-    document.querySelectorAll('[data-btn]').forEach(btn => {
-        btn.addEventListener('touchstart', (e) => {
-            if (editModeActive) return;
-            e.preventDefault();
-            btn.classList.add('pressed');
-            const name = btn.getAttribute('data-btn');
-            if (btnMapping[name]) {
-                ps2Data[btnMapping[name].byte] &= btnMapping[name].mask;
-                updateHexDisplay();
-            }
-        }, {passive: false});
-
-        btn.addEventListener('touchend', (e) => {
-            if (editModeActive) return;
-            e.preventDefault();
-            btn.classList.remove('pressed');
-            const name = btn.getAttribute('data-btn');
-            if (btnMapping[name]) {
-                ps2Data[btnMapping[name].byte] |= ~btnMapping[name].mask;
-                updateHexDisplay();
-            }
-        }, {passive: false});
-    });
-
-    // ===== TOUCH STICK LOGIC =====
-    function initStick(zoneId, thumbId, valId, byteX, byteY) {
-        const zone = document.getElementById(zoneId);
-        const thumb = document.getElementById(thumbId);
-        if (!zone || !thumb) return;
-
-        let activeTouchId = null;
-
-        zone.addEventListener('touchstart', (e) => {
-            if (editModeActive) return;
-            e.preventDefault();
-            for (let i = 0; i < e.changedTouches.length; i++) {
-                if (activeTouchId === null) {
-                    activeTouchId = e.changedTouches[i].identifier;
-                    thumb.classList.add('active');
-                    moveThumb(e.changedTouches[i].clientX, e.changedTouches[i].clientY);
-                    break;
-                }
-            }
-        }, {passive: false});
-
-        zone.addEventListener('touchmove', (e) => {
-            if (editModeActive || activeTouchId === null) return;
-            e.preventDefault();
-            for (let i = 0; i < e.changedTouches.length; i++) {
-                if (e.changedTouches[i].identifier === activeTouchId) {
-                    moveThumb(e.changedTouches[i].clientX, e.changedTouches[i].clientY);
-                    break;
-                }
-            }
-        }, {passive: false});
-
-        function stop() {
-            activeTouchId = null;
-            thumb.classList.remove('active');
-            thumb.style.transform = `translate(-50%, -50%)`;
-            ps2Data[byteX] = 128; ps2Data[byteY] = 128;
-            updateHexDisplay();
-        }
-
-        zone.addEventListener('touchend', (e) => {
-            for (let i = 0; i < e.changedTouches.length; i++) {
-                if (e.changedTouches[i].identifier === activeTouchId) { stop(); break; }
-            }
-        });
-
-        function moveThumb(clientX, clientY) {
-            const rect = zone.getBoundingClientRect();
-            const cx = rect.left + rect.width / 2;
-            const cy = rect.top + rect.height / 2;
-            const maxR = rect.width / 2 - 22;
-            
-            let dx = clientX - cx;
-            let dy = clientY - cy;
-            const dist = Math.sqrt(dx * dx + dy * dy);
-            
-            if (dist > maxR) { dx = dx / dist * maxR; dy = dy / dist * maxR; }
-            
-            thumb.style.transform = `translate(calc(-50% + ${dx}px), calc(-50% + ${dy}px))`;
-            
-            ps2Data[byteX] = Math.round(((dx / maxR) * 127) + 128);
-            ps2Data[byteY] = Math.round(((dy / maxR) * 127) + 128);
-            updateHexDisplay();
-        }
-    }
-
-    // ===== BLUETOOTH & SMART IDLE =====
-    const MICROBIT_SERVICE_UUID = "6e400001-b5a3-f393-e0a9-e50e24dcca9e";
-    const MICROBIT_TX_UUID = "6e400002-b5a3-f393-e0a9-e50e24dcca9e"; 
-    const MICROBIT_RX_UUID = "6e400003-b5a3-f393-e0a9-e50e24dcca9e"; 
-    let btServer, listenChar, writeChar, bluetoothDevice, handshakeWatchdog = null; 
-    let heartbeatInterval = null, sequenceCounter = 0, idleSendCount = 0, isBleSleeping = false;
-
-    async function connectBluetooth() {
-        const channelSelect = document.getElementById('channelSelect');
-        const statusText = document.getElementById('statusText');
-        const connectOverlay = document.getElementById('connectOverlay');
-        
-        if (channelSelect.value === "DEBUG") {
-            connectOverlay.style.display = 'none';
-            document.getElementById('dataStatus').textContent = '● DEBUG ACTIVE';
-            document.getElementById('dataStatus').style.color = '#00e5ff';
-            startHeartbeat(); 
-            return;
-        }
-        
-        try {
-            statusText.innerText = "Scanning for Micro:Bit...";
-            bluetoothDevice = await navigator.bluetooth.requestDevice({ filters: [{ namePrefix: 'BBC micro:bit' }], optionalServices: [MICROBIT_SERVICE_UUID] });
-            bluetoothDevice.addEventListener('gattserverdisconnected', disconnectAndExit);
-            btServer = await bluetoothDevice.gatt.connect();
-            const service = await btServer.getPrimaryService(MICROBIT_SERVICE_UUID);
-            listenChar = await service.getCharacteristic(MICROBIT_TX_UUID);
-            writeChar = await service.getCharacteristic(MICROBIT_RX_UUID);
-            await listenChar.startNotifications();
-            listenChar.addEventListener('characteristicvaluechanged', (e) => {
-                let msg = new TextDecoder('utf-8').decode(e.target.value).trim();
-                if (msg.includes("HANDSHAKE")) {
-                    if (msg.split(":")[1] === channelSelect.value) {
-                        if (handshakeWatchdog) clearInterval(handshakeWatchdog);
-                        connectOverlay.style.display = 'none';
-                        document.getElementById('dataStatus').textContent = '● Connected';
-                        document.getElementById('dataStatus').style.color = '#00e5ff';
-                        startHeartbeat();
-                    } else statusText.innerText = "Error: Wrong Channel!";
-                }
-            });
-            statusText.innerText = 'Connected! Waiting for handshake...';
-            handshakeWatchdog = setInterval(() => { if (btServer && btServer.connected) btServer.disconnect(); }, 5000);
-        } catch (error) { statusText.innerText = "Connection Failed."; }
-    }
-
-    function disconnectAndExit() {
-        if (heartbeatInterval) clearInterval(heartbeatInterval);
-        if (handshakeWatchdog) clearInterval(handshakeWatchdog);
-        document.getElementById('connectOverlay').style.display = 'flex';
-        document.getElementById('dataStatus').textContent = '● Disconnected';
-        document.getElementById('dataStatus').style.color = '#ff3d71';
-        document.getElementById('statusText').innerText = "Disconnected cleanly.";
-        if (btServer && btServer.connected) btServer.disconnect();
-    }
-
-    function isControllerIdle() { return ps2Data[3]===255 && ps2Data[4]===255 && ps2Data[5]===128 && ps2Data[6]===128 && ps2Data[7]===128 && ps2Data[8]===128; }
-    
-    function sendControllerData() {
-        if (isControllerIdle()) { 
-            if (idleSendCount >= 2) { 
-                document.getElementById('dataStatus').textContent = '● BLE Asleep'; 
-                document.getElementById('dataStatus').style.color = '#ff3d71'; 
-                isBleSleeping = true; return; 
-            } 
-            idleSendCount++; 
-        } else { 
-            idleSendCount = 0; 
-        }
-        
-        document.getElementById('dataStatus').textContent = '● Transmitting'; 
-        document.getElementById('dataStatus').style.color = '#00e5ff'; 
-        isBleSleeping = false;
-        
-        ps2Data[0] = sequenceCounter; 
-        sequenceCounter = (sequenceCounter + 1) % 256; 
-        updateHexDisplay();
-
-        if (writeChar && document.getElementById('connectOverlay').style.display === 'none') {
-            writeChar.writeValueWithoutResponse(new TextEncoder().encode(Array.from(ps2Data).map(b => b.toString(16).toUpperCase().padStart(2, '0')).join('') + '\n')).catch(()=>{});
-        }
-    }
-    function startHeartbeat() { if (heartbeatInterval) clearInterval(heartbeatInterval); heartbeatInterval = setInterval(sendControllerData, 50); }
-
-    // ===== BULLETPROOF GAMEPAD API (Matches your ORIGINAL Builder IDs) =====
-    window.addEventListener('load', () => {
-        loadLayout(); 
-        buildHexDisplay(); 
-        initStick('leftStickZone', 'leftThumb', 'leftStickVal', 7, 8); 
-        initStick('rightStickZone', 'rightThumb', 'rightStickVal', 5, 6); 
-        updateClock(); 
-        setInterval(updateClock, 1000);
-        
-        let prevGamepadBtns = new Array(20).fill(false);
-        const DEADZONE = 0.15;
-        
-        function pollGamepad() {
-            try {
-                const gamepads = navigator.getGamepads ? navigator.getGamepads() : [];
-                let gp = null;
-                for (let i = 0; i < gamepads.length; i++) { if (gamepads[i] && gamepads[i].connected) { gp = gamepads[i]; break; } }
-
-                if (gp) {
-                    const modeText = document.getElementById('modeText');
-                    if (modeText && !modeText.textContent.includes("HYBRID")) { 
-                        modeText.textContent = "MODE: 0x73 HYBRID"; 
-                        modeText.style.color = "#00ff7f"; 
-                        const hwId = document.getElementById('hwIdText');
-                        if(hwId) { hwId.style.display = "inline"; hwId.textContent = "HW: " + gp.id.substring(0, 30); }
-                    }
-
-                    // Joysticks targeting your specific leftThumb/rightThumb IDs
-                    if (Math.abs(gp.axes[0]) > DEADZONE || Math.abs(gp.axes[1]) > DEADZONE) { 
-                        ps2Data[7] = Math.round(((gp.axes[0] + 1) / 2) * 255); ps2Data[8] = Math.round(((gp.axes[1] + 1) / 2) * 255); 
-                        safeMirrorStick('leftThumb', gp.axes[0], gp.axes[1]); prevGamepadBtns['L_STICK'] = true; 
-                    } else if (prevGamepadBtns['L_STICK']) { 
-                        ps2Data[7] = 128; ps2Data[8] = 128; 
-                        safeMirrorStick('leftThumb', 0, 0); prevGamepadBtns['L_STICK'] = false; 
-                    }
-                    
-                    if (Math.abs(gp.axes[2]) > DEADZONE || Math.abs(gp.axes[3]) > DEADZONE) { 
-                        ps2Data[5] = Math.round(((gp.axes[2] + 1) / 2) * 255); ps2Data[6] = Math.round(((gp.axes[3] + 1) / 2) * 255); 
-                        safeMirrorStick('rightThumb', gp.axes[2], gp.axes[3]); prevGamepadBtns['R_STICK'] = true; 
-                    } else if (prevGamepadBtns['R_STICK']) { 
-                        ps2Data[5] = 128; ps2Data[6] = 128; 
-                        safeMirrorStick('rightThumb', 0, 0); prevGamepadBtns['R_STICK'] = false; 
-                    }
-
-                    // Buttons using your EXACT original Capitalization mapping (Cross, Circle, etc)
-                    const mappings = [ 
-                        { gpIdx: 12, byte: 3, mask: 0x10, name: 'Up' }, { gpIdx: 13, byte: 3, mask: 0x40, name: 'Down' }, 
-                        { gpIdx: 14, byte: 3, mask: 0x80, name: 'Left' }, { gpIdx: 15, byte: 3, mask: 0x20, name: 'Right' }, 
-                        { gpIdx: 0, byte: 4, mask: 0x40, name: 'Cross' }, { gpIdx: 1, byte: 4, mask: 0x20, name: 'Circle' }, 
-                        { gpIdx: 2, byte: 4, mask: 0x80, name: 'Square' }, { gpIdx: 3, byte: 4, mask: 0x10, name: 'Triangle' }, 
-                        { gpIdx: 4, byte: 4, mask: 0x04, name: 'L1' }, { gpIdx: 5, byte: 4, mask: 0x08, name: 'R1' }, 
-                        { gpIdx: 6, byte: 4, mask: 0x01, name: 'L2' }, { gpIdx: 7, byte: 4, mask: 0x02, name: 'R2' }, 
-                        { gpIdx: 8, byte: 3, mask: 0x01, name: 'Select' }, { gpIdx: 9, byte: 3, mask: 0x08, name: 'Start' } 
-                    ];
-                    
-                    mappings.forEach(m => {
-                        const rawBtn = gp.buttons[m.gpIdx]; if (rawBtn === undefined) return; 
-                        const isPressed = typeof rawBtn === "object" ? rawBtn.pressed : rawBtn > 0;
-                        const wasPressed = prevGamepadBtns[m.gpIdx];
-                        if (isPressed && !wasPressed) { 
-                            ps2Data[m.byte] &= ~m.mask; safeHighlightBtn(m.name, true); prevGamepadBtns[m.gpIdx] = true; 
-                            if (gp.vibrationActuator) gp.vibrationActuator.playEffect("dual-rumble", { startDelay: 0, duration: 100, weakMagnitude: 0.5, strongMagnitude: 0.5 }).catch(()=>{}); 
-                        } else if (!isPressed && wasPressed) { 
-                            ps2Data[m.byte] |= m.mask; safeHighlightBtn(m.name, false); prevGamepadBtns[m.gpIdx] = false; 
-                        }
-                    });
-                }
-            } catch (error) { 
-                const modeText = document.getElementById('modeText'); 
-                if (modeText) modeText.textContent = "ERR: " + error.message.substring(0, 20); 
-            }
-            requestAnimationFrame(pollGamepad); 
-        }
-        
-        function safeMirrorStick(thumbId, axisX, axisY) { 
-            const thumb = document.getElementById(thumbId); if (!thumb) return; 
-            const maxRadius = 40; 
-            thumb.style.transform = `translate(calc(-50% + ${axisX * maxRadius}px), calc(-50% + ${axisY * maxRadius}px))`; 
-            if(axisX !== 0 || axisY !== 0) thumb.classList.add('active'); else thumb.classList.remove('active'); 
-        }
-        
-        function safeHighlightBtn(buttonName, isPressed) { 
-            const btnEl = document.querySelector(`[data-btn="${buttonName}"]`); if (!btnEl) return; 
-            if (isPressed) btnEl.classList.add('pressed'); else btnEl.classList.remove('pressed'); 
-        }
-        
-        requestAnimationFrame(pollGamepad);
-    });
-  </script>
-
-</body></html>
+  <script src="app.js"></script>
+</body>
+</html>
