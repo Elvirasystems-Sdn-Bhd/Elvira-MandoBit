@@ -68,6 +68,21 @@ let bleSleepTimer = null;
 
 // Listen for the connect button click
 connectBtn.addEventListener('click', async () => {
+    // >>> ADD THIS DEBUG BYPASS BLOCK <<<
+    if (channelSelect.value === "DEBUG") {
+        if (connectOverlay) connectOverlay.style.display = 'none';
+        
+        const gameControls = document.getElementById('gameControls');
+        if (gameControls) gameControls.style.display = 'flex';
+        
+        const bleStatusText = document.getElementById('bleStatusText');
+        if (bleStatusText) {
+            bleStatusText.innerText = "*DEBUG MODE (No BLE)";
+            bleStatusText.style.color = "#ffdd00"; // Yellow text for debug mode
+        }
+        return; // This completely stops the rest of the Bluetooth code from running!
+    }
+
     try {
         statusText.innerText = "Status: Scanning for Micro:Bit...";
         
