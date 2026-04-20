@@ -62,6 +62,7 @@ let bluetoothDevice;
 let server;
 let writeChar; // <--- CRITICAL: Defines the transmitter variable!
 let heartbeatInterval = null;
+let handshakeWatchdog = null;
 let lastPayloadStr = "";
 let bleSleepTimer = null;
 
@@ -92,7 +93,25 @@ connectBtn.addEventListener('click', async () => {
         await rxCharacteristic.startNotifications();
         rxCharacteristic.addEventListener('characteristicvaluechanged', handleHandshake);
 
-        statusText.innerText = "Status: Connected! Waiting for handshake...";
+        // 6. Inject the bouncing emoji CSS
+        if (!document.getElementById('handshakeStyle')) {
+            const style = document.createElement('style');
+            style.id = 'handshakeStyle';
+            style.innerHTML = `@keyframes handshake-bounce { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-5px); } } .handshake-anim { display: inline-block; animation: handshake-bounce 0.6s ease-in-out infinite; }`;
+            document.head.appendChild(style);
+        }
+
+        // Show the animated status
+        statusText.innerHTML = `Status: Connected! Waiting for handshake <span class="handshake-anim">🤝</span>`;
+
+        // 7. Start the PING watchdog (Sends "PING\n" every 500ms)
+        if (handshakeWatchdog) clearInterval(handshakeWatchdog);
+        handshakeWatchdog = setInterval(() => {
+            if (writeChar) {
+                let encoder = new TextEncoder();
+                writeChar.writeValueWithoutResponse(encoder.encode("PING\n")).catch(()=>{});
+            }
+        }, 500);
 
     } catch (error) {
         console.error(error);
@@ -109,12 +128,13 @@ function handleHandshake(event) {
         let hwChannel = message.split(":")[1];
         
         if (hwChannel === channelSelect.value || channelSelect.value === "DEBUG") {
+            // >>> ADD THIS LINE TO STOP PINGING <<<
+            if (handshakeWatchdog) clearInterval(handshakeWatchdog);
+            // Hide overlay
             if (connectOverlay) connectOverlay.style.display = 'none'; // Success! Reveal the HUD!
-
-            // >>> ADD THIS LINE: Reveal the Settings & Fullscreen buttons <<<
+            // Reveal the Settings & Fullscreen buttons
             const gameControls = document.getElementById('gameControls');
             if (gameControls) gameControls.style.display = 'flex';
-            
             // --- START THE HEARTBEAT AT 50ms ---
             if (heartbeatInterval) clearInterval(heartbeatInterval);
             heartbeatInterval = setInterval(sendControllerData, 50); 
