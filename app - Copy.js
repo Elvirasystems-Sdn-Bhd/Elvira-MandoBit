@@ -315,11 +315,67 @@ const PS2_MASKS = {
 };
 
 // --- NEW VARIABLES FOR BLE SLEEP & HEADER LOGIC ---
-// let lastPayloadStr = "";
-// let bleSleepTimer = null;
+let lastPayloadStr = "";
+let bleSleepTimer = null;
 
 function updateHexDisplay() {
-    // 1. Update the main RAW DATA display at the bottom
+    // 1. Check if the payload actually changed
+    const currentPayloadStr = ps2Data.slice(1).join(',');
+    const bleStatusText = document.getElementById('bleStatusText'); 
+    
+    // NEW: Define the exact "Idle" state of the controller
+    // If no buttons are pressed and sticks are centered, it is Idle.
+    const isIdle = (
+        ps2Data[3] === 0xFF && 
+        ps2Data[4] === 0xFF && 
+        ps2Data[5] === 0x80 && 
+        ps2Data[6] === 0x80 && 
+        ps2Data[7] === 0x80 && 
+        ps2Data[8] === 0x80
+    );
+    
+    // NEW: Trigger if data changed, OR if we are actively holding a button/stick (not idle)
+    if (currentPayloadStr !== lastPayloadStr || !isIdle) {
+        
+        // Keep the Watchdog fed!
+        ps2Data[0]++;
+        if (ps2Data[0] === 0x00) ps2Data[0] = 0x01; 
+        
+        lastPayloadStr = currentPayloadStr;
+
+        // >>> UPDATED BLE TRANSMIT BLOCK <<<
+        if (typeof txCharacteristic !== 'undefined' && txCharacteristic) {
+            // 1. Convert the raw array into an 18-character text string
+            let hexString = Array.from(ps2Data).map(b => b.toString(16).toUpperCase().padStart(2, '0')).join('');
+            
+            // 2. Append the newline character so MakeCode knows the packet is finished!
+            hexString += '\n';
+            
+            // 3. Convert that text string into a buffer Bluetooth can send
+            let encoder = new TextEncoder();
+            let txBuffer = encoder.encode(hexString);
+            
+            // 4. Send the text string to the Micro:bit
+            txCharacteristic.writeValueWithoutResponse(txBuffer)
+                .catch(err => console.warn("BLE Write Error:", err));
+        }
+        
+        if (bleStatusText) {
+            bleStatusText.innerText = "*Transmitting";
+            bleStatusText.style.color = "#00e5ff"; 
+        }
+        
+        clearTimeout(bleSleepTimer);
+        bleSleepTimer = setTimeout(() => {
+            // Only go to sleep if we are actually idle
+            if (bleStatusText) {
+                bleStatusText.innerText = "*BLE sleeping";
+                bleStatusText.style.color = "#ff3d71"; 
+            }
+        }, 150);
+    }
+
+    // 2. Update the main RAW DATA display at the bottom
     for (let i = 0; i < 9; i++) {
         const el = document.getElementById('byte' + i);
         if (el) {
@@ -332,14 +388,14 @@ function updateHexDisplay() {
         }
     }
 
-    // 2. Update the X and Y text values under the Joysticks
+    // 3. Update the X and Y text values under the Joysticks
     const leftStickVal = document.getElementById('leftStickVal');
     const rightStickVal = document.getElementById('rightStickVal');
     
     if (leftStickVal) leftStickVal.innerText = `X:${ps2Data[7].toString(16).toUpperCase().padStart(2, '0')} Y:${ps2Data[8].toString(16).toUpperCase().padStart(2, '0')}`;
     if (rightStickVal) rightStickVal.innerText = `X:${ps2Data[5].toString(16).toUpperCase().padStart(2, '0')} Y:${ps2Data[6].toString(16).toUpperCase().padStart(2, '0')}`;
 
-    // 3. Update the visual joysticks on the screen
+    // 4. Update the visual joysticks on the screen
     safeMirrorStick('leftThumb', (ps2Data[7] / 255) * 2 - 1, (ps2Data[8] / 255) * 2 - 1);
     safeMirrorStick('rightThumb', (ps2Data[5] / 255) * 2 - 1, (ps2Data[6] / 255) * 2 - 1);
 }
